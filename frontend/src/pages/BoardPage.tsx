@@ -74,6 +74,12 @@ function BoardPage() {
   const [cardModalOpen, setCardModalOpen] = useState(false);
   const [listForm] = Form.useForm<ListFormValues>();
   const [activeCard, setActiveCard] = useState<CardData | null>(null);
+  const [dragSnapshot, setDragSnapshot] = useState<{
+    activeCard: CardData;
+    activeListId: number;
+    overListId: number;
+    overCardId?: number;
+  } | null>(null);
   const [boardLabels, setBoardLabels] = useState<{ id: number; name: string; color: string }[]>([]);
   const [editingBoard, setEditingBoard] = useState(false);
   const [editBoardTitle, setEditBoardTitle] = useState('');
@@ -141,62 +147,39 @@ function BoardPage() {
   const handleDragStart = (event: DragStartEvent) => {
     const { active } = event;
     if (active.data.current?.type === 'card') {
-      setActiveCard(active.data.current.card);
+      const card = active.data.current.card as CardData;
+      const activeListId = lists.find(l => l.cards.some(c => c.id === card.id))?.id;
+      if (activeListId !== undefined) {
+        setActiveCard(card);
+        setDragSnapshot({ activeCard: card, activeListId, overListId: activeListId });
+      }
     }
   };
 
   const handleDragOver = (event: DragOverEvent) => {
-    const { active, over } = event;
-    if (!over) return;
+    const { over } = event;
+    if (!over || !dragSnapshot) return;
 
-    const activeData = active.data.current;
     const overData = over.data.current;
+    let overListId: number | undefined;
+    let overCardId: number | undefined;
 
-    if (activeData?.type !== 'card') return;
-
-    const activeCard = activeData.card as CardData;
-    const activeListId = lists.find(l => l.cards.some(c => c.id === activeCard.id))?.id;
-
-    let overListId: number | undefined = undefined;
     if (overData?.type === 'list') {
       overListId = (overData.list as ListData).id;
     } else if (overData?.type === 'card') {
-      overListId = lists.find(l => l.cards.some(c => c.id === (overData.card as CardData).id))?.id;
+      overCardId = (overData.card as CardData).id;
+      overListId = lists.find(l => l.cards.some(c => c.id === overCardId))?.id;
     }
 
-    if (activeListId === undefined || overListId === undefined || activeListId === overListId) return;
-
-    if (activeListId === null || overListId === null || activeListId === overListId) return;
-
-    setLists(prev => {
-      const activeList = prev.find(l => l.id === activeListId);
-      const overList = prev.find(l => l.id === overListId);
-      if (!activeList || !overList) return prev;
-
-      const cardIndex = activeList.cards.findIndex(c => c.id === activeCard.id);
-      const newActiveCards = [...activeList.cards];
-      newActiveCards.splice(cardIndex, 1);
-
-      let insertIndex = overList.cards.length;
-      if (overData?.type === 'card') {
-        const idx = overList.cards.findIndex(c => c.id === (overData.card as CardData).id);
-        insertIndex = idx >= 0 ? idx : overList.cards.length;
-      }
-
-      const newOverCards = [...overList.cards];
-      newOverCards.splice(insertIndex, 0, activeCard);
-
-      return prev.map(list => {
-        if (list.id === activeListId) return { ...list, cards: newActiveCards };
-        if (list.id === overListId) return { ...list, cards: newOverCards };
-        return list;
-      });
-    });
+    if (overListId !== undefined) {
+      setDragSnapshot(prev => prev ? { ...prev, overListId, overCardId } : null);
+    }
   };
 
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
     setActiveCard(null);
+    setDragSnapshot(null);
 
     if (!over) return;
 
@@ -220,55 +203,59 @@ function BoardPage() {
       return;
     }
 
-    const activeCard = activeData.card as CardData;
-    const activeListId = lists.find(l => l.cards.some(c => c.id === activeCard.id))?.id;
+    if (!dragSnapshot) return;
 
-    if (overData?.type === 'card') {
-      const overCard = overData.card as CardData;
-      const overListId = lists.find(l => l.cards.some(c => c.id === overCard.id))?.id;
+    const { activeCard, activeListId, overListId, overCardId } = dragSnapshot;
 
-      if (activeListId === overListId && activeListId !== undefined) {
-        const list = lists.find(l => l.id === activeListId);
-        if (!list) return;
-        const oldIndex = list.cards.findIndex(c => c.id === activeCard.id);
-        const newIndex = list.cards.findIndex(c => c.id === overCard.id);
-        if (oldIndex !== newIndex) {
-          const newLists = lists.map(l => {
-            if (l.id === activeListId) {
-              return { ...l, cards: arrayMove(l.cards, oldIndex, newIndex) };
-            }
-            return l;
-          });
-          setLists(newLists);
-          try {
-            await cardApi.reorder(activeCard.id, newIndex + 1);
-          } catch {
-            loadBoard();
+    if (activeListId === overListId && activeListId !== undefined) {
+      const list = lists.find(l => l.id === activeListId);
+      if (!list) return;
+      const oldIndex = list.cards.findIndex(c => c.id === activeCard.id);
+      const newIndex = overCardId
+        ? list.cards.findIndex(c => c.id === overCardId)
+        : list.cards.length - 1;
+
+      if (oldIndex !== newIndex && newIndex >= 0) {
+        const newLists = lists.map(l => {
+          if (l.id === activeListId) {
+            return { ...l, cards: arrayMove(l.cards, oldIndex, newIndex) };
           }
-        }
-      } else if (activeListId !== undefined && overListId !== undefined) {
-        const overList = lists.find(l => l.id === overListId);
-        const newPosition = overList ? overList.cards.findIndex(c => c.id === overCard.id) + 1 : 1;
+          return l;
+        });
+        setLists(newLists);
         try {
-          await cardApi.move(activeCard.id, overListId, newPosition);
-          loadBoard();
+          await cardApi.reorder(activeCard.id, newIndex + 1);
         } catch {
-          message.error('Erro ao mover card');
           loadBoard();
         }
       }
-    } else if (overData?.type === 'list') {
-      const overListId = (overData.list as ListData).id;
-      if (activeListId !== undefined && activeListId !== overListId) {
-        const overList = lists.find(l => l.id === overListId);
-        const newPosition = overList ? overList.cards.length + 1 : 1;
-        try {
-          await cardApi.move(activeCard.id, overListId, newPosition);
-          loadBoard();
-        } catch {
-          message.error('Erro ao mover card');
-          loadBoard();
-        }
+    } else if (activeListId !== undefined && overListId !== undefined) {
+      const overList = lists.find(l => l.id === overListId);
+      let newPosition: number;
+      if (overCardId && overList) {
+        newPosition = overList.cards.findIndex(c => c.id === overCardId) + 1;
+      } else {
+        newPosition = overList ? overList.cards.length + 1 : 1;
+      }
+
+      try {
+        await cardApi.move(activeCard.id, overListId, newPosition);
+        loadBoard();
+      } catch {
+        message.error('Erro ao mover card');
+        loadBoard();
+      }
+    } else if (activeListId !== undefined && overData?.type === 'list') {
+      const targetListId = (overData.list as ListData).id;
+      const overList = lists.find(l => l.id === targetListId);
+      const newPosition = overList ? overList.cards.length + 1 : 1;
+
+      try {
+        await cardApi.move(activeCard.id, targetListId, newPosition);
+        loadBoard();
+      } catch {
+        message.error('Erro ao mover card');
+        loadBoard();
       }
     }
   };
