@@ -169,6 +169,11 @@ function BoardPage() {
 
   return (
     <Layout className="board-layout">
+      <div className="board-background">
+        <div className="board-shape board-shape-1"></div>
+        <div className="board-shape board-shape-2"></div>
+        <div className="board-shape board-shape-3"></div>
+      </div>
       <Header className="board-header">
         <div className="header-left">
           <Button 
@@ -298,7 +303,7 @@ function BoardPage() {
                       type="text" 
                       icon={<PlusOutlined />}
                       className="add-card-button"
-                      onClick={() => setAddingCardToList(list.id)}
+                      onClick={() => { setIsAddingList(false); setAddingCardToList(list.id); }}
                     >
                       Adicionar card
                     </Button>
@@ -339,7 +344,7 @@ function BoardPage() {
                   type="dashed" 
                   icon={<PlusOutlined />}
                   className="add-list-button"
-                  onClick={() => setIsAddingList(true)}
+                  onClick={() => { setAddingCardToList(null); setIsAddingList(true); }}
                 >
                   Adicionar lista
                 </Button>
