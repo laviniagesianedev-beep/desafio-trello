@@ -1,0 +1,51 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.simple
+    container_name: boardy-backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/var/www
+    environment:
+      APP_ENV: local
+      APP_DEBUG: true
+      DB_CONNECTION: sqlite
+      DB_DATABASE: /var/www/database/database.sqlite
+    depends_on:
+      - redis
+    networks:
+      - boardy-network
+
+  frontend:
+    image: node:20-alpine
+    container_name: boardy-frontend
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+    working_dir: /app
+    command: sh -c "
+      npm install &&
+      npm run dev"
+    environment:
+      VITE_WS_URL: http://localhost:6001
+    depends_on:
+      - backend
+    networks:
+      - boardy-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: boardy-redis
+    ports:
+      - "6379:6379"
+    networks:
+      - boardy-network
+
+networks:
+  boardy-network:
+    driver: bridge

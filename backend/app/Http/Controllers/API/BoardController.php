@@ -26,13 +26,13 @@ class BoardController extends Controller
                 ->orderBy('updated_at', 'desc')
                 ->get();
             
-            // Quadros que o usuário é membro
+            // Quadros que o usuário é membro (não dono)
             $memberBoards = $user->boards()
-                ->whereNull('archived_at')
-                ->where('user_id', '!=', $user->id)
+                ->whereNull('boards.archived_at')
+                ->where('boards.user_id', '!=', $user->id)
                 ->with('owner', 'members')
                 ->withCount('lists', 'cards')
-                ->orderBy('updated_at', 'desc')
+                ->orderBy('boards.updated_at', 'desc')
                 ->get();
             
             return response()->json([
@@ -89,10 +89,10 @@ class BoardController extends Controller
             
             // Quadros arquivados que o usuário é membro
             $memberBoards = $user->boards()
-                ->whereNotNull('archived_at')
+                ->whereNotNull('boards.archived_at')
                 ->with('owner', 'members')
                 ->withCount('lists', 'cards')
-                ->orderBy('archived_at', 'desc')
+                ->orderBy('boards.archived_at', 'desc')
                 ->get();
             
             return response()->json([

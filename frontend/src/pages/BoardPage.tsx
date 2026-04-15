@@ -59,6 +59,8 @@ function BoardPage() {
   const [loading, setLoading] = useState(true);
   const [newListTitle, setNewListTitle] = useState('');
   const [isAddingList, setIsAddingList] = useState(false);
+  const [newCardTitle, setNewCardTitle] = useState('');
+  const [addingCardToList, setAddingCardToList] = useState<number | null>(null);
   const [selectedCard, setSelectedCard] = useState<Card | null>(null);
   const [cardModalOpen, setCardModalOpen] = useState(false);
 
@@ -97,7 +99,10 @@ function BoardPage() {
     }
   };
 
-  const handleCreateCard = async (listId: number, title: string) => {
+  const handleCreateCard = async (listId: number) => {
+    const title = newCardTitle.trim();
+    if (!title) return;
+    
     try {
       const response = await cardApi.create(listId, { title });
       setLists(lists.map(list => 
@@ -105,6 +110,8 @@ function BoardPage() {
           ? { ...list, cards: [...list.cards, response.data] }
           : list
       ));
+      setNewCardTitle('');
+      setAddingCardToList(null);
       message.success('Card criado com sucesso!');
     } catch (error) {
       message.error('Erro ao criar card');
@@ -261,26 +268,26 @@ function BoardPage() {
                 
                 {/* Adicionar card */}
                 <div className="add-card">
-                  {isAddingList ? (
+                  {addingCardToList === list.id ? (
                     <div className="add-card-form">
                       <Input
                         placeholder="Digite o título do card..."
-                        value={newListTitle}
-                        onChange={(e) => setNewListTitle(e.target.value)}
-                        onPressEnter={() => handleCreateCard(list.id, newListTitle)}
+                        value={newCardTitle}
+                        onChange={(e) => setNewCardTitle(e.target.value)}
+                        onPressEnter={() => handleCreateCard(list.id)}
                         autoFocus
                       />
                       <Space>
                         <Button 
                           type="primary" 
                           size="small"
-                          onClick={() => handleCreateCard(list.id, newListTitle)}
+                          onClick={() => handleCreateCard(list.id)}
                         >
                           Adicionar
                         </Button>
                         <Button 
                           size="small"
-                          onClick={() => setIsAddingList(false)}
+                          onClick={() => { setAddingCardToList(null); setNewCardTitle(''); }}
                         >
                           Cancelar
                         </Button>
@@ -291,7 +298,7 @@ function BoardPage() {
                       type="text" 
                       icon={<PlusOutlined />}
                       className="add-card-button"
-                      onClick={() => setIsAddingList(true)}
+                      onClick={() => setAddingCardToList(list.id)}
                     >
                       Adicionar card
                     </Button>

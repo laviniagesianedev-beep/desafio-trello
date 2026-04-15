@@ -55,6 +55,14 @@ class Board extends Model
     }
 
     /**
+     * Cards do quadro (através das listas)
+     */
+    public function cards()
+    {
+        return $this->hasManyThrough(Card::class, ListModel::class, 'board_id', 'list_id');
+    }
+
+    /**
      * Verificar se um usuário é membro
      */
     public function hasMember($userId)
