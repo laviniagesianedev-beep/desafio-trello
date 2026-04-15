@@ -126,26 +126,52 @@ export const listApi = {
 // Serviços de Cards
 export const cardApi = {
   getByList: (listId: number) => api.get(`/lists/${listId}/cards`),
-  
+
   getById: (id: number) => api.get(`/cards/${id}`),
-  
-  create: (listId: number, data: { title: string; description?: string; due_date?: string }) =>
+
+  create: (listId: number, data: { title: string; description?: string; due_date?: string; label_ids?: number[] }) =>
     api.post(`/lists/${listId}/cards`, data),
-  
-  update: (id: number, data: { title?: string; description?: string; due_date?: string }) =>
+
+  update: (id: number, data: { title?: string; description?: string; due_date?: string; label_ids?: number[] }) =>
     api.put(`/cards/${id}`, data),
-  
+
   reorder: (id: number, position: number) =>
     api.put(`/cards/${id}/reorder`, { position }),
-  
+
   move: (id: number, listId: number, position: number) =>
     api.put(`/cards/${id}/move`, { list_id: listId, position }),
-  
+
   archive: (id: number) => api.put(`/cards/${id}/archive`),
-  
+
   restore: (id: number) => api.put(`/cards/${id}/restore`),
-  
+
   delete: (id: number) => api.delete(`/cards/${id}`),
+};
+
+// Serviços de Labels
+export const labelApi = {
+  getByBoard: (boardId: number) => api.get(`/boards/${boardId}/labels`),
+
+  create: (boardId: number, data: { name: string; color: string }) =>
+    api.post(`/boards/${boardId}/labels`, data),
+
+  update: (id: number, data: { name?: string; color?: string }) =>
+    api.put(`/labels/${id}`, data),
+
+  delete: (id: number) => api.delete(`/labels/${id}`),
+};
+
+// Serviços de Checklist
+export const checklistApi = {
+  getByCard: (cardId: number) => api.get(`/cards/${cardId}/checklist`),
+
+  create: (cardId: number, content: string) =>
+    api.post(`/cards/${cardId}/checklist`, { content }),
+
+  update: (id: number, data: { content?: string; is_checked?: boolean; position?: number }) =>
+    api.put(`/checklist-items/${id}`, data),
+
+  delete: (id: number) => api.delete(`/checklist-items/${id}`),
 };
 
 // Serviços de Comentários

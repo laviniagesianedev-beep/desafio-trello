@@ -94,8 +94,8 @@ export const boardyTheme: ThemeConfig = {
     Input: {
       colorBgContainer: '#FFFFFF',
       colorBorder: '#E0E0E0',
-      colorBorderHover: '#A8D8EA',
-      colorBorderFocus: '#A8D8EA',
+      colorPrimaryBorderHover: '#A8D8EA',
+      colorPrimaryBorder: '#A8D8EA',
       colorText: '#2C3E50',
       colorTextPlaceholder: '#BDC3C7',
       borderRadius: 12,
@@ -116,7 +116,6 @@ export const boardyTheme: ThemeConfig = {
     Modal: {
       colorBgElevated: '#FFFFFF',
       borderRadiusLG: 20,
-      headerHeight: 56,
       paddingContentHorizontal: 24,
       paddingContentVertical: 16,
     },
@@ -167,7 +166,6 @@ export const boardyTheme: ThemeConfig = {
     Message: {
       colorBgElevated: '#FFFFFF',
       borderRadiusLG: 12,
-      contentFontSize: 14,
     },
     Notification: {
       colorBgElevated: '#FFFFFF',
@@ -185,12 +183,6 @@ export const boardyTheme: ThemeConfig = {
       defaultColor: '#F0F0F0',
     },
     DatePicker: {
-      colorBgContainer: '#FFFFFF',
-      colorBorder: '#E0E0E0',
-      borderRadius: 12,
-      controlHeight: 40,
-    },
-    TimePicker: {
       colorBgContainer: '#FFFFFF',
       colorBorder: '#E0E0E0',
       borderRadius: 12,

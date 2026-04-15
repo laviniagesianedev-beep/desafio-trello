@@ -29,7 +29,7 @@ class CardController extends Controller
 
             $cards = $list->cards()
                 ->whereNull('archived_at')
-                ->with(['creator', 'assignedMembers', 'comments', 'attachments'])
+                ->with(['creator', 'assignedMembers', 'comments', 'attachments', 'labels', 'checklistItems'])
                 ->orderBy('position')
                 ->get();
 
@@ -67,6 +67,8 @@ class CardController extends Controller
                 'title' => 'required|string|max:255',
                 'description' => 'nullable|string|max:2000',
                 'due_date' => 'nullable|date|after:today',
+                'label_ids' => 'nullable|array',
+                'label_ids.*' => 'exists:labels,id',
             ]);
 
             $card = new Card();
@@ -78,7 +80,11 @@ class CardController extends Controller
             $card->position = $card->getNextPosition();
             $card->save();
 
-            return response()->json($card->load('creator'), 201);
+            if (!empty($validated['label_ids'])) {
+                $card->labels()->attach($validated['label_ids']);
+            }
+
+            return response()->json($card->load(['creator', 'labels', 'checklistItems']), 201);
 
         } catch (ValidationException $e) {
             return response()->json([
@@ -99,7 +105,7 @@ class CardController extends Controller
     public function show(Request $request, $id)
     {
         try {
-            $card = Card::with(['creator', 'assignedMembers', 'comments.author', 'attachments.uploader'])
+            $card = Card::with(['creator', 'assignedMembers', 'comments.author', 'attachments.uploader', 'labels', 'checklistItems'])
                 ->findOrFail($id);
 
             $user = $request->user();
@@ -146,11 +152,21 @@ class CardController extends Controller
                 'title' => 'sometimes|required|string|max:255',
                 'description' => 'nullable|string|max:2000',
                 'due_date' => 'nullable|date|after:today',
+                'label_ids' => 'nullable|array',
+                'label_ids.*' => 'exists:labels,id',
             ]);
 
-            $card->update($validated);
+            $card->update(array_filter([
+                'title' => $validated['title'] ?? null,
+                'description' => $validated['description'] ?? null,
+                'due_date' => $validated['due_date'] ?? null,
+            ], fn($v) => $v !== null));
 
-            return response()->json($card);
+            if (array_key_exists('label_ids', $validated)) {
+                $card->labels()->sync($validated['label_ids'] ?? []);
+            }
+
+            return response()->json($card->load(['creator', 'labels', 'checklistItems']));
 
         } catch (ValidationException $e) {
             return response()->json([

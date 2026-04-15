@@ -63,6 +63,14 @@ class Board extends Model
     }
 
     /**
+     * Labels do quadro
+     */
+    public function labels()
+    {
+        return $this->hasMany(Label::class);
+    }
+
+    /**
      * Verificar se um usuário é membro
      */
     public function hasMember($userId)

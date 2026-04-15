@@ -153,8 +153,9 @@ class BoardController extends Controller
         try {
             $board = Board::with(['lists.cards' => function ($query) {
                 $query->whereNull('archived_at')
+                      ->with(['labels', 'checklistItems'])
                       ->orderBy('position');
-            }, 'members', 'owner'])->findOrFail($id);
+            }, 'members', 'owner', 'labels'])->findOrFail($id);
 
             // Verificar permissão
             $user = $request->user();

@@ -1,28 +1,26 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
-  Layout, 
-  Tabs, 
-  Card, 
-  Button, 
-  Modal, 
-  Form, 
-  Input, 
-  Typography, 
-  Space, 
-  Avatar, 
-  Dropdown, 
-  message, 
+import {
+  Layout,
+  Card,
+  Button,
+  Modal,
+  Form,
+  Input,
+  Typography,
+  Space,
+  Avatar,
+  Dropdown,
+  message,
   Spin,
   Empty,
   Tag
 } from 'antd';
-import { 
-  PlusOutlined, 
-  TeamOutlined, 
-  SettingOutlined, 
+import {
+  PlusOutlined,
+  TeamOutlined,
+  SettingOutlined,
   LogoutOutlined,
-  MoreOutlined,
   FolderOutlined,
   StarOutlined,
   ClockCircleOutlined
@@ -47,9 +45,9 @@ interface BoardData {
   title: string;
   description: string | null;
   background: string;
-  lists_count: number;
-  cards_count: number;
-  members_count: number;
+  lists_count?: number;
+  cards_count?: number;
+  members_count?: number;
   updated_at: string;
   owner?: {
     id: number;
@@ -167,7 +165,7 @@ function DashboardPage() {
         <Space size="small">
           <Tag icon={<FolderOutlined />}>{board.lists_count || 0} listas</Tag>
           <Tag icon={<StarOutlined />}>{board.cards_count || 0} cards</Tag>
-          {board.members_count > 1 && (
+          {(board.members_count ?? 0) > 1 && (
             <Tag icon={<TeamOutlined />}>{board.members_count} membros</Tag>
           )}
         </Space>

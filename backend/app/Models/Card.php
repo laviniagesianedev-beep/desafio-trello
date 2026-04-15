@@ -74,6 +74,24 @@ class Card extends Model
     }
 
     /**
+     * Labels do card
+     */
+    public function labels()
+    {
+        return $this->belongsToMany(Label::class, 'card_label')
+                    ->withTimestamps();
+    }
+
+    /**
+     * Itens de checklist do card
+     */
+    public function checklistItems()
+    {
+        return $this->hasMany(ChecklistItem::class)
+                    ->orderBy('position');
+    }
+
+    /**
      * Mover para uma nova posição
      */
     public function moveTo($newListId, $newPosition)

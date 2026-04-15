@@ -9,6 +9,8 @@ use App\Http\Controllers\API\CardController;
 use App\Http\Controllers\API\CommentController;
 use App\Http\Controllers\API\AttachmentController;
 use App\Http\Controllers\API\MemberController;
+use App\Http\Controllers\API\LabelController;
+use App\Http\Controllers\API\ChecklistItemController;
 
 /*
 |--------------------------------------------------------------------------
@@ -56,6 +58,18 @@ Route::middleware('auth:sanctum')->group(function () {
     // Membros
     Route::apiResource('boards.members', MemberController::class)->shallow();
     Route::put('/boards/{board}/members/{member}/role', [MemberController::class, 'updateRole']);
+
+    // Labels
+    Route::get('/boards/{board}/labels', [LabelController::class, 'index']);
+    Route::post('/boards/{board}/labels', [LabelController::class, 'store']);
+    Route::put('/labels/{label}', [LabelController::class, 'update']);
+    Route::delete('/labels/{label}', [LabelController::class, 'destroy']);
+
+    // Checklist Items
+    Route::get('/cards/{card}/checklist', [ChecklistItemController::class, 'index']);
+    Route::post('/cards/{card}/checklist', [ChecklistItemController::class, 'store']);
+    Route::put('/checklist-items/{item}', [ChecklistItemController::class, 'update']);
+    Route::delete('/checklist-items/{item}', [ChecklistItemController::class, 'destroy']);
 });
 
 // Rota de health check

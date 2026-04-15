@@ -251,6 +251,66 @@
   font-weight: 500;
 }
 
+.card-due.overdue {
+  background: #FFEBEE;
+  color: #C62828;
+}
+
+.card-due.due-today {
+  background: #E3F2FD;
+  color: #1565C0;
+}
+
+.card-checklist {
+  font-size: 11px;
+  color: #5A6C7D;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.card-checklist.complete {
+  color: #2E7D32;
+}
+
+.card-labels {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 6px;
+}
+
+.list-title-form {
+  flex: 1;
+}
+
+.list-title-form .ant-form-item {
+  margin-bottom: 0;
+}
+
+.board-filters {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.board-filters .active {
+  background: rgba(168, 216, 234, 0.2);
+  color: var(--pastel-blue);
+}
+
+.filter-panel {
+  position: absolute;
+  top: 60px;
+  right: 200px;
+  background: white;
+  padding: 12px;
+  border-radius: var(--radius-md);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  z-index: 200;
+  min-width: 200px;
+}
+
 /* Add Card */
 .add-card-form {
   display: flex;
