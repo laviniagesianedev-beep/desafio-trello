@@ -1,28 +1,31 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { 
-  Layout, 
-  Button, 
-  Space, 
-  Typography, 
-  Avatar, 
-  Dropdown, 
+import {
+  Layout,
+  Button,
+  Space,
+  Typography,
+  Avatar,
+  Dropdown,
   Input,
   Spin,
   message,
   Modal,
-  Tooltip
+  Tooltip,
+  Form,
+  DatePicker,
 } from 'antd';
-import { 
-  ArrowLeftOutlined, 
-  PlusOutlined, 
+import {
+  ArrowLeftOutlined,
+  PlusOutlined,
   MoreOutlined,
   TeamOutlined,
   SettingOutlined,
   StarOutlined,
   EditOutlined,
-  DeleteOutlined
+  DeleteOutlined,
 } from '@ant-design/icons';
+import dayjs, { Dayjs } from 'dayjs';
 import { useAuthStore } from '../store/authStore';
 import { useBoardStore } from '../store/boardStore';
 import { boardApi, listApi, cardApi } from '../services/api';
@@ -30,6 +33,7 @@ import './BoardPage.css';
 
 const { Header, Content } = Layout;
 const { Title, Text } = Typography;
+const { TextArea } = Input;
 
 interface List {
   id: number;
@@ -49,22 +53,31 @@ interface Card {
   assigned_members?: any[];
 }
 
+interface CardFormValues {
+  title: string;
+  description?: string;
+  due_date?: Dayjs;
+}
+
+interface ListFormValues {
+  title: string;
+}
+
 function BoardPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user } = useAuthStore();
   const { currentBoard, setCurrentBoard } = useBoardStore();
-  
+
   const [lists, setLists] = useState<List[]>([]);
   const [loading, setLoading] = useState(true);
-  const [newListTitle, setNewListTitle] = useState('');
   const [isAddingList, setIsAddingList] = useState(false);
-  const [newCardTitle, setNewCardTitle] = useState('');
   const [addingCardToList, setAddingCardToList] = useState<number | null>(null);
   const [selectedCard, setSelectedCard] = useState<Card | null>(null);
   const [cardModalOpen, setCardModalOpen] = useState(false);
+  const [listForm] = Form.useForm<ListFormValues>();
+  const [cardForm] = Form.useForm<CardFormValues>();
 
-  // Carregar quadro e listas
   useEffect(() => {
     if (id) {
       loadBoard();
@@ -85,33 +98,38 @@ function BoardPage() {
     }
   };
 
-  const handleCreateList = async () => {
-    if (!newListTitle.trim()) return;
-    
+  const handleCreateList = async (values: ListFormValues) => {
     try {
-      const response = await listApi.create(Number(id), newListTitle);
+      const response = await listApi.create(Number(id), values.title);
       setLists([...lists, { ...response.data, cards: [] }]);
-      setNewListTitle('');
       setIsAddingList(false);
+      listForm.resetFields();
       message.success('Lista criada com sucesso!');
     } catch (error) {
       message.error('Erro ao criar lista');
     }
   };
 
-  const handleCreateCard = async (listId: number) => {
-    const title = newCardTitle.trim();
-    if (!title) return;
-    
+  const handleCreateCard = async (listId: number, values: CardFormValues) => {
     try {
-      const response = await cardApi.create(listId, { title });
-      setLists(lists.map(list => 
-        list.id === listId 
+      const payload: { title: string; description?: string; due_date?: string } = {
+        title: values.title,
+      };
+      if (values.description) {
+        payload.description = values.description;
+      }
+      if (values.due_date) {
+        payload.due_date = values.due_date.format('YYYY-MM-DD');
+      }
+
+      const response = await cardApi.create(listId, payload);
+      setLists(lists.map(list =>
+        list.id === listId
           ? { ...list, cards: [...list.cards, response.data] }
           : list
       ));
-      setNewCardTitle('');
       setAddingCardToList(null);
+      cardForm.resetFields();
       message.success('Card criado com sucesso!');
     } catch (error) {
       message.error('Erro ao criar card');
@@ -125,6 +143,26 @@ function BoardPage() {
 
   const handleBack = () => {
     navigate('/dashboard');
+  };
+
+  const openAddCard = (listId: number) => {
+    setAddingCardToList(listId);
+    setIsAddingList(false);
+  };
+
+  const openAddList = () => {
+    setIsAddingList(true);
+    setAddingCardToList(null);
+  };
+
+  const cancelAddCard = () => {
+    setAddingCardToList(null);
+    cardForm.resetFields();
+  };
+
+  const cancelAddList = () => {
+    setIsAddingList(false);
+    listForm.resetFields();
   };
 
   const boardMenuItems = [
@@ -169,16 +207,11 @@ function BoardPage() {
 
   return (
     <Layout className="board-layout">
-      <div className="board-background">
-        <div className="board-shape board-shape-1"></div>
-        <div className="board-shape board-shape-2"></div>
-        <div className="board-shape board-shape-3"></div>
-      </div>
       <Header className="board-header">
         <div className="header-left">
-          <Button 
-            type="text" 
-            icon={<ArrowLeftOutlined />} 
+          <Button
+            type="text"
+            icon={<ArrowLeftOutlined />}
             onClick={handleBack}
             className="back-button"
           />
@@ -193,7 +226,7 @@ function BoardPage() {
             )}
           </div>
         </div>
-        
+
         <div className="header-right">
           <div className="board-members">
             <Avatar.Group maxCount={3} size={32}>
@@ -205,15 +238,15 @@ function BoardPage() {
                 </Tooltip>
               ))}
             </Avatar.Group>
-            <Button 
-              type="text" 
+            <Button
+              type="text"
               icon={<TeamOutlined />}
               className="members-button"
             >
               Membros
             </Button>
           </div>
-          
+
           <Dropdown menu={{ items: boardMenuItems }} placement="bottomRight">
             <Button type="text" icon={<MoreOutlined />} className="more-button" />
           </Dropdown>
@@ -222,7 +255,6 @@ function BoardPage() {
 
       <Content className="board-content">
         <div className="board-container">
-          {/* Listas */}
           <div className="lists-container">
             {lists.map((list) => (
               <div key={list.id} className="list-column">
@@ -230,17 +262,17 @@ function BoardPage() {
                   <Title level={5} className="list-title">
                     {list.title}
                   </Title>
-                  <Button 
-                    type="text" 
+                  <Button
+                    type="text"
                     icon={<MoreOutlined />}
                     className="list-menu-button"
                   />
                 </div>
-                
+
                 <div className="list-cards">
                   {list.cards.map((card) => (
-                    <div 
-                      key={card.id} 
+                    <div
+                      key={card.id}
                       className="card-item"
                       onClick={() => handleCardClick(card)}
                     >
@@ -270,91 +302,93 @@ function BoardPage() {
                     </div>
                   ))}
                 </div>
-                
-                {/* Adicionar card */}
-                <div className="add-card">
-                  {addingCardToList === list.id ? (
-                    <div className="add-card-form">
-                      <Input
-                        placeholder="Digite o título do card..."
-                        value={newCardTitle}
-                        onChange={(e) => setNewCardTitle(e.target.value)}
-                        onPressEnter={() => handleCreateCard(list.id)}
-                        autoFocus
-                      />
+
+                {addingCardToList === list.id ? (
+                  <div className="add-card-form">
+                    <Form
+                      form={cardForm}
+                      layout="vertical"
+                      onFinish={(values) => handleCreateCard(list.id, values)}
+                    >
+                      <Form.Item
+                        name="title"
+                        rules={[{ required: true, message: 'Título é obrigatório' }]}
+                      >
+                        <Input placeholder="Título do card" autoFocus />
+                      </Form.Item>
+                      <Form.Item name="description">
+                        <TextArea
+                          placeholder="Descrição (opcional)"
+                          rows={2}
+                        />
+                      </Form.Item>
+                      <Form.Item name="due_date">
+                        <DatePicker
+                          placeholder="Data de entrega (opcional)"
+                          style={{ width: '100%' }}
+                          format="DD/MM/YYYY"
+                        />
+                      </Form.Item>
                       <Space>
-                        <Button 
-                          type="primary" 
-                          size="small"
-                          onClick={() => handleCreateCard(list.id)}
-                        >
+                        <Button type="primary" htmlType="submit" size="small">
                           Adicionar
                         </Button>
-                        <Button 
-                          size="small"
-                          onClick={() => { setAddingCardToList(null); setNewCardTitle(''); }}
-                        >
+                        <Button size="small" onClick={cancelAddCard}>
                           Cancelar
                         </Button>
                       </Space>
-                    </div>
-                  ) : (
-                    <Button 
-                      type="text" 
-                      icon={<PlusOutlined />}
-                      className="add-card-button"
-                      onClick={() => { setIsAddingList(false); setAddingCardToList(list.id); }}
-                    >
-                      Adicionar card
-                    </Button>
-                  )}
-                </div>
+                    </Form>
+                  </div>
+                ) : (
+                  <Button
+                    type="text"
+                    icon={<PlusOutlined />}
+                    className="add-card-button"
+                    onClick={() => openAddCard(list.id)}
+                  >
+                    Adicionar card
+                  </Button>
+                )}
               </div>
             ))}
-            
-            {/* Adicionar lista */}
-            <div className="add-list">
-              {isAddingList ? (
-                <div className="add-list-form">
-                  <Input
-                    placeholder="Digite o título da lista..."
-                    value={newListTitle}
-                    onChange={(e) => setNewListTitle(e.target.value)}
-                    onPressEnter={handleCreateList}
-                    autoFocus
-                  />
+
+            {isAddingList ? (
+              <div className="add-list-form">
+                <Form
+                  form={listForm}
+                  layout="vertical"
+                  onFinish={handleCreateList}
+                >
+                  <Form.Item
+                    name="title"
+                    rules={[{ required: true, message: 'Título é obrigatório' }]}
+                  >
+                    <Input placeholder="Título da lista" autoFocus />
+                  </Form.Item>
                   <Space>
-                    <Button 
-                      type="primary" 
-                      size="small"
-                      onClick={handleCreateList}
-                    >
+                    <Button type="primary" htmlType="submit" size="small">
                       Adicionar
                     </Button>
-                    <Button 
-                      size="small"
-                      onClick={() => setIsAddingList(false)}
-                    >
+                    <Button size="small" onClick={cancelAddList}>
                       Cancelar
                     </Button>
                   </Space>
-                </div>
-              ) : (
-                <Button 
-                  type="dashed" 
-                  icon={<PlusOutlined />}
-                  className="add-list-button"
-                  onClick={() => { setAddingCardToList(null); setIsAddingList(true); }}
-                >
-                  Adicionar lista
-                </Button>
-              )}
-            </div>
+                </Form>
+              </div>
+            ) : (
+              <Button
+                type="dashed"
+                icon={<PlusOutlined />}
+                className="add-list-button"
+                onClick={openAddList}
+              >
+                Adicionar lista
+              </Button>
+            )}
           </div>
         </div>
       </Content>
 
-      {/* Modal do Card */}
       <Modal
         title={selectedCard?.title}
         open={cardModalOpen}
@@ -369,7 +403,7 @@ function BoardPage() {
               <Title level={5}>Descrição</Title>
               <Text>{selectedCard.description || 'Sem descrição'}</Text>
             </div>
-            
+
             {selectedCard.due_date && (
               <div className="card-detail-section">
                 <Title level={5}>Data de entrega</Title>
@@ -378,17 +412,17 @@ function BoardPage() {
                     weekday: 'long',
                     year: 'numeric',
                     month: 'long',
-                    day: 'numeric'
+                    day: 'numeric',
                   })}
                 </Text>
               </div>
             )}
-            
+
             <div className="card-detail-section">
               <Title level={5}>Comentários</Title>
               <Text>Seção de comentários (implementar)</Text>
             </div>
-            
+
             <div className="card-detail-section">
               <Title level={5}>Anexos</Title>
               <Text>Seção de anexos (implementar)</Text>
