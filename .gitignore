@@ -1,0 +1,58 @@
+# Dependencies
+node_modules/
+vendor/
+.env
+.env.local
+.env.production
+
+# Build files
+dist/
+build/
+*.log
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker
+docker-compose.override.yml
+
+# Backend
+backend/storage/logs/*
+backend/bootstrap/cache/*
+!backend/storage/logs/.gitkeep
+!backend/bootstrap/cache/.gitkeep
+
+# Frontend
+frontend/dist/
+frontend/node_modules/
+
+# SQLite
+*.sqlite
+*.sqlite-journal
+
+# Uploads
+backend/storage/app/public/attachments/*
+!backend/storage/app/public/attachments/.gitkeep
+
+# Cache
+.cache/
+.phpunit.cache/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Testing
+coverage/
+*.lcov
+
+# Misc
+*.tgz
+*.tar.gz
+*.zip
