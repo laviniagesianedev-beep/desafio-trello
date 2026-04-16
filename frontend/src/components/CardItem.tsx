@@ -2,6 +2,7 @@ import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { Typography, Tooltip } from 'antd';
 import { LabelBadge } from './LabelBadge';
+import './CardItem.css';
 
 const { Text } = Typography;
 
@@ -30,8 +31,7 @@ function isOverdue(dueDate: string | null): boolean {
 
 function isDueToday(dueDate: string | null): boolean {
   if (!dueDate) return false;
-  const today = new Date().toDateString();
-  return new Date(dueDate).toDateString() === today;
+  return new Date(dueDate).toDateString() === new Date().toDateString();
 }
 
 export function CardItem({ card, onClick, isHidden = false }: CardItemProps) {
@@ -50,8 +50,7 @@ export function CardItem({ card, onClick, isHidden = false }: CardItemProps) {
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
-    opacity: isDragging ? 0.5 : 1,
-    display: isHidden ? 'none' : 'flex',
+    display: isHidden ? 'none' : undefined,
   };
 
   const checklistTotal = card.checklist_items?.length ?? 0;
@@ -65,7 +64,7 @@ export function CardItem({ card, onClick, isHidden = false }: CardItemProps) {
       style={style}
       {...attributes}
       {...listeners}
-      className="card-item"
+      className={`card-item ${isDragging ? 'dragging' : ''}`}
       onClick={onClick}
     >
       {card.labels && card.labels.length > 0 && (

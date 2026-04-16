@@ -5,11 +5,18 @@ namespace App\Http\Controllers\API;
 use App\Http\Controllers\Controller;
 use App\Models\Card;
 use App\Models\ListModel;
+use App\Services\ReorderService;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 
 class CardController extends Controller
 {
+    private ReorderService $reorderService;
+
+    public function __construct(ReorderService $reorderService)
+    {
+        $this->reorderService = $reorderService;
+    }
     /**
      * Listar cards de uma lista
      */
@@ -191,7 +198,6 @@ class CardController extends Controller
             $user = $request->user();
             $board = $card->list->board;
 
-            // Verificar permissão (apenas admin, moderador ou normal)
             if ($board->user_id !== $user->id) {
                 $role = $board->getMemberRole($user->id);
                 if (!in_array($role, ['admin', 'moderator', 'normal'])) {
@@ -205,24 +211,7 @@ class CardController extends Controller
                 'position' => 'required|integer|min:1',
             ]);
 
-            // Reordenar cards na lista
-            $cards = $card->list->cards()
-                ->where('id', '!=', $card->id)
-                ->orderBy('position')
-                ->get();
-
-            $position = 1;
-            foreach ($cards as $c) {
-                if ($position == $validated['position']) {
-                    $position++;
-                }
-                $c->position = $position;
-                $c->save();
-                $position++;
-            }
-
-            $card->position = $validated['position'];
-            $card->save();
+            $card = $this->reorderService->reorderCard($id, $validated['position']);
 
             return response()->json($card);
 
@@ -249,7 +238,6 @@ class CardController extends Controller
             $user = $request->user();
             $board = $card->list->board;
 
-            // Verificar permissão (apenas admin, moderador ou normal)
             if ($board->user_id !== $user->id) {
                 $role = $board->getMemberRole($user->id);
                 if (!in_array($role, ['admin', 'moderator', 'normal'])) {
@@ -264,7 +252,6 @@ class CardController extends Controller
                 'position' => 'required|integer|min:1',
             ]);
 
-            // Verificar se a lista pertence ao mesmo quadro
             $targetList = ListModel::findOrFail($validated['list_id']);
             if ($targetList->board_id !== $board->id) {
                 return response()->json([
@@ -272,7 +259,7 @@ class CardController extends Controller
                 ], 400);
             }
 
-            $card->moveTo($validated['list_id'], $validated['position']);
+            $card = $this->reorderService->moveCard($id, $validated['list_id'], $validated['position']);
 
             return response()->json($card);
 

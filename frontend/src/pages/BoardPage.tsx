@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   DndContext,
@@ -9,7 +9,6 @@ import {
   useSensors,
   DragStartEvent,
   DragEndEvent,
-  DragOverEvent,
 } from '@dnd-kit/core';
 import {
   SortableContext,
@@ -19,7 +18,6 @@ import {
 import {
   Layout,
   Button,
-  Space,
   Typography,
   Avatar,
   Dropdown,
@@ -62,6 +60,11 @@ interface FilterState {
   dueDate: 'all' | 'overdue' | 'today' | 'week';
 }
 
+const PASTEL_COLORS = [
+  '#A8D8EA', '#AA96DA', '#FCBAD3', '#FFFFD2',
+  '#FFD3B6', '#FFAAA5', '#A8E6CF', '#C7CEEA',
+];
+
 function BoardPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -74,16 +77,11 @@ function BoardPage() {
   const [cardModalOpen, setCardModalOpen] = useState(false);
   const [listForm] = Form.useForm<ListFormValues>();
   const [activeCard, setActiveCard] = useState<CardData | null>(null);
-  const [dragSnapshot, setDragSnapshot] = useState<{
-    activeCard: CardData;
-    activeListId: number;
-    overListId: number;
-    overCardId?: number;
-  } | null>(null);
   const [boardLabels, setBoardLabels] = useState<{ id: number; name: string; color: string }[]>([]);
   const [editingBoard, setEditingBoard] = useState(false);
   const [editBoardTitle, setEditBoardTitle] = useState('');
   const [editBoardDesc, setEditBoardDesc] = useState('');
+  const [editBoardColor, setEditBoardColor] = useState('');
   const [filters, setFilters] = useState<FilterState>({
     search: '',
     labels: [],
@@ -95,11 +93,8 @@ function BoardPage() {
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } })
   );
 
-  useEffect(() => {
-    if (id) loadBoard();
-  }, [id]);
-
-  const loadBoard = async () => {
+  const loadBoard = useCallback(async () => {
+    if (!id) return;
     setLoading(true);
     try {
       const { data } = await boardApi.getById(Number(id));
@@ -108,18 +103,23 @@ function BoardPage() {
       setBoardLabels(data.labels || []);
       setEditBoardTitle(data.title);
       setEditBoardDesc(data.description || '');
+      setEditBoardColor(data.background || '');
     } catch {
       message.error('Erro ao carregar quadro');
       navigate('/dashboard');
     } finally {
       setLoading(false);
     }
-  };
+  }, [id]);
+
+  useEffect(() => {
+    loadBoard();
+  }, [loadBoard]);
 
   const handleCreateList = async (values: ListFormValues) => {
     try {
       const { data } = await listApi.create(Number(id), values.title);
-      setLists([...lists, { ...data, cards: [] }]);
+      setLists(prev => [...prev, { ...data, cards: [] }]);
       setIsAddingList(false);
       listForm.resetFields();
       message.success('Lista criada');
@@ -133,126 +133,101 @@ function BoardPage() {
     setCardModalOpen(true);
   };
 
-  const handleBack = () => navigate('/dashboard');
-
-  const openAddList = () => {
-    setIsAddingList(true);
-  };
-
-  const cancelAddList = () => {
-    setIsAddingList(false);
-    listForm.resetFields();
-  };
-
   const handleDragStart = (event: DragStartEvent) => {
     const { active } = event;
     if (active.data.current?.type === 'card') {
-      const card = active.data.current.card as CardData;
-      const activeListId = lists.find(l => l.cards.some(c => c.id === card.id))?.id;
-      if (activeListId !== undefined) {
-        setActiveCard(card);
-        setDragSnapshot({ activeCard: card, activeListId, overListId: activeListId });
-      }
-    }
-  };
-
-  const handleDragOver = (event: DragOverEvent) => {
-    const { over } = event;
-    if (!over || !dragSnapshot) return;
-
-    const overData = over.data.current;
-    let overListId: number | undefined;
-    let overCardId: number | undefined;
-
-    if (overData?.type === 'list') {
-      overListId = (overData.list as ListData).id;
-    } else if (overData?.type === 'card') {
-      overCardId = (overData.card as CardData).id;
-      overListId = lists.find(l => l.cards.some(c => c.id === overCardId))?.id;
-    }
-
-    if (overListId !== undefined) {
-      setDragSnapshot(prev => prev ? { ...prev, overListId, overCardId } : null);
+      setActiveCard(active.data.current.card as CardData);
     }
   };
 
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
     setActiveCard(null);
-    setDragSnapshot(null);
 
-    if (!over) return;
+    if (!over || active.id === over.id) return;
 
     const activeData = active.data.current;
     const overData = over.data.current;
 
-    if (activeData?.type !== 'card') {
-      if (activeData?.type === 'list' && overData?.type === 'list') {
-        const oldIndex = lists.findIndex(l => l.id === (activeData.list as ListData).id);
-        const newIndex = lists.findIndex(l => l.id === (overData.list as ListData).id);
-        if (oldIndex !== newIndex) {
-          const newLists = arrayMove(lists, oldIndex, newIndex);
-          setLists(newLists);
-          try {
-            await listApi.reorder((activeData.list as ListData).id, newIndex + 1);
-          } catch {
-            loadBoard();
-          }
+    if (activeData?.type === 'list' && overData?.type === 'list') {
+      const oldIndex = lists.findIndex(l => l.id === (activeData.list as ListData).id);
+      const newIndex = lists.findIndex(l => l.id === (overData.list as ListData).id);
+      if (oldIndex !== -1 && newIndex !== -1 && oldIndex !== newIndex) {
+        const newLists = arrayMove(lists, oldIndex, newIndex);
+        setLists(newLists);
+        try {
+          await listApi.reorder((activeData.list as ListData).id, newIndex + 1);
+        } catch {
+          loadBoard();
         }
       }
       return;
     }
 
-    if (!dragSnapshot) return;
+    if (activeData?.type !== 'card') return;
 
-    const { activeCard, activeListId, overListId, overCardId } = dragSnapshot;
+    const activeCardData = activeData.card as CardData;
+    const sourceListId = lists.find(l => l.cards.some(c => c.id === activeCardData.id))?.id;
 
-    if (activeListId === overListId && activeListId !== undefined) {
-      const list = lists.find(l => l.id === activeListId);
+    if (!sourceListId) return;
+
+    let targetListId: number | undefined;
+    let targetIndexInList: number | undefined;
+
+    if (overData?.type === 'card') {
+      const overCardData = overData.card as CardData;
+      targetListId = lists.find(l => l.cards.some(c => c.id === overCardData.id))?.id;
+      if (targetListId !== undefined) {
+        const targetList = lists.find(l => l.id === targetListId)!;
+        targetIndexInList = targetList.cards.findIndex(c => c.id === overCardData.id);
+      }
+    } else if (overData?.type === 'list') {
+      targetListId = (overData.list as ListData).id;
+      const targetList = lists.find(l => l.id === targetListId);
+      targetIndexInList = targetList ? targetList.cards.length : 0;
+    }
+
+    if (targetListId === undefined) return;
+
+    if (sourceListId === targetListId) {
+      if (targetIndexInList === undefined) return;
+      const list = lists.find(l => l.id === sourceListId);
       if (!list) return;
-      const oldIndex = list.cards.findIndex(c => c.id === activeCard.id);
-      const newIndex = overCardId
-        ? list.cards.findIndex(c => c.id === overCardId)
-        : list.cards.length - 1;
+      const oldIdx = list.cards.findIndex(c => c.id === activeCardData.id);
+      if (oldIdx === -1 || oldIdx === targetIndexInList) return;
 
-      if (oldIndex !== newIndex && newIndex >= 0) {
-        const newLists = lists.map(l => {
-          if (l.id === activeListId) {
-            return { ...l, cards: arrayMove(l.cards, oldIndex, newIndex) };
-          }
+      const newCards = arrayMove(list.cards, oldIdx, targetIndexInList);
+      setLists(prev => prev.map(l => l.id === sourceListId ? { ...l, cards: newCards } : l));
+      try {
+        await cardApi.reorder(activeCardData.id, targetIndexInList + 1);
+      } catch {
+        loadBoard();
+      }
+    } else {
+      const sourceList = lists.find(l => l.id === sourceListId);
+      const targetList = lists.find(l => l.id === targetListId);
+      if (!sourceList || !targetList) return;
+
+      const newPosition = targetIndexInList !== undefined
+        ? targetIndexInList + 1
+        : targetList.cards.length + 1;
+
+      setLists(prev => {
+        const cardIdx = sourceList.cards.findIndex(c => c.id === activeCardData.id);
+        const cardToMove = sourceList.cards[cardIdx];
+        const newSourceCards = sourceList.cards.filter(c => c.id !== activeCardData.id);
+        const newTargetCards = [...targetList.cards];
+        const insertAt = targetIndexInList !== undefined ? targetIndexInList : newTargetCards.length;
+        newTargetCards.splice(insertAt, 0, cardToMove);
+        return prev.map(l => {
+          if (l.id === sourceListId) return { ...l, cards: newSourceCards };
+          if (l.id === targetListId) return { ...l, cards: newTargetCards };
           return l;
         });
-        setLists(newLists);
-        try {
-          await cardApi.reorder(activeCard.id, newIndex + 1);
-        } catch {
-          loadBoard();
-        }
-      }
-    } else if (activeListId !== undefined && overListId !== undefined) {
-      const overList = lists.find(l => l.id === overListId);
-      let newPosition: number;
-      if (overCardId && overList) {
-        newPosition = overList.cards.findIndex(c => c.id === overCardId) + 1;
-      } else {
-        newPosition = overList ? overList.cards.length + 1 : 1;
-      }
+      });
 
       try {
-        await cardApi.move(activeCard.id, overListId, newPosition);
-        loadBoard();
-      } catch {
-        message.error('Erro ao mover card');
-        loadBoard();
-      }
-    } else if (activeListId !== undefined && overData?.type === 'list') {
-      const targetListId = (overData.list as ListData).id;
-      const overList = lists.find(l => l.id === targetListId);
-      const newPosition = overList ? overList.cards.length + 1 : 1;
-
-      try {
-        await cardApi.move(activeCard.id, targetListId, newPosition);
-        loadBoard();
+        await cardApi.move(activeCardData.id, targetListId, newPosition);
       } catch {
         message.error('Erro ao mover card');
         loadBoard();
@@ -328,6 +303,7 @@ function BoardPage() {
       await boardApi.update(currentBoard.id, {
         title: editBoardTitle,
         description: editBoardDesc,
+        background: editBoardColor,
       });
       setEditingBoard(false);
       loadBoard();
@@ -360,7 +336,7 @@ function BoardPage() {
     <Layout className="board-layout">
       <Header className="board-header">
         <div className="header-left">
-          <Button type="text" icon={<ArrowLeftOutlined />} onClick={handleBack} className="back-button" />
+          <Button type="text" icon={<ArrowLeftOutlined />} onClick={() => navigate('/dashboard')} className="back-button" />
           <div className="board-info">
             <Title level={4} className="board-title">{currentBoard?.title}</Title>
             {currentBoard?.description && (
@@ -376,7 +352,7 @@ function BoardPage() {
               placeholder="Buscar cards..."
               value={filters.search}
               onChange={e => setFilters(f => ({ ...f, search: e.target.value }))}
-              style={{ width: 160 }}
+              className="filter-search"
               size="small"
               allowClear
             />
@@ -384,15 +360,15 @@ function BoardPage() {
               type="text"
               icon={<FilterOutlined />}
               onClick={() => setShowFilters(!showFilters)}
-              className={showFilters ? 'active' : ''}
+              className={`filter-toggle ${showFilters ? 'active' : ''}`}
               size="small"
             />
           </div>
 
           {showFilters && (
             <div className="filter-panel">
-              <Text type="secondary" style={{ fontSize: '0.8rem' }}>Labels:</Text>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginTop: 4 }}>
+              <Text type="secondary" className="filter-label">Labels:</Text>
+              <div className="filter-labels-list">
                 {boardLabels.map(label => (
                   <LabelBadge
                     key={label.id}
@@ -409,8 +385,8 @@ function BoardPage() {
                   />
                 ))}
               </div>
-              <Text type="secondary" style={{ fontSize: '0.8rem', marginTop: 8, display: 'block' }}>Data:</Text>
-              <Space size={4}>
+              <Text type="secondary" className="filter-label filter-label-date">Data:</Text>
+              <div className="filter-date-buttons">
                 {(['all', 'overdue', 'today', 'week'] as const).map(opt => (
                   <Button
                     key={opt}
@@ -421,7 +397,7 @@ function BoardPage() {
                     {opt === 'all' ? 'Todas' : opt === 'overdue' ? 'Atrasadas' : opt === 'today' ? 'Hoje' : 'Semana'}
                   </Button>
                 ))}
-              </Space>
+              </div>
             </div>
           )}
 
@@ -429,7 +405,7 @@ function BoardPage() {
             <Avatar.Group maxCount={3} size={32}>
               {currentBoard?.members?.map((member: any) => (
                 <Tooltip key={member.id} title={member.name}>
-                  <Avatar style={{ backgroundColor: '#A8D8EA' }}>
+                  <Avatar className="member-avatar">
                     {member.name.charAt(0).toUpperCase()}
                   </Avatar>
                 </Tooltip>
@@ -451,7 +427,6 @@ function BoardPage() {
           sensors={sensors}
           collisionDetection={closestCorners}
           onDragStart={handleDragStart}
-          onDragOver={handleDragOver}
           onDragEnd={handleDragEnd}
         >
           <div className="board-container">
@@ -461,6 +436,7 @@ function BoardPage() {
                   <ListColumn
                     key={list.id}
                     list={list}
+                    allLists={lists}
                     onCardClick={handleCardClick}
                     onListUpdated={loadBoard}
                     onListDeleted={loadBoard}
@@ -476,14 +452,14 @@ function BoardPage() {
                     <Form.Item name="title" rules={[{ required: true, message: 'Título é obrigatório' }]}>
                       <Input placeholder="Título da lista" autoFocus />
                     </Form.Item>
-                    <Space>
+                    <div className="add-list-actions">
                       <Button type="primary" htmlType="submit" size="small">Adicionar</Button>
-                      <Button size="small" onClick={cancelAddList}>Cancelar</Button>
-                    </Space>
+                      <Button size="small" onClick={() => { setIsAddingList(false); listForm.resetFields(); }}>Cancelar</Button>
+                    </div>
                   </Form>
                 </div>
               ) : (
-                <Button type="dashed" icon={<PlusOutlined />} className="add-list-button" onClick={openAddList}>
+                <Button type="dashed" icon={<PlusOutlined />} className="add-list-button" onClick={() => setIsAddingList(true)}>
                   Adicionar lista
                 </Button>
               )}
@@ -492,7 +468,7 @@ function BoardPage() {
 
           <DragOverlay>
             {activeCard && (
-              <div style={{ opacity: 0.8 }}>
+              <div className="drag-overlay-card">
                 <CardItem card={activeCard} onClick={() => {}} />
               </div>
             )}
@@ -517,15 +493,29 @@ function BoardPage() {
         title="Editar Quadro"
         onOk={handleSaveBoard}
         okText="Salvar"
+        className="edit-board-modal"
       >
-        <Space direction="vertical" style={{ width: '100%' }}>
-          <div>
+        <div className="edit-board-form">
+          <div className="edit-board-field">
             <Text type="secondary">Título</Text>
             <Input value={editBoardTitle} onChange={e => setEditBoardTitle(e.target.value)} />
           </div>
-          <div>
+          <div className="edit-board-field">
             <Text type="secondary">Descrição</Text>
             <Input.TextArea value={editBoardDesc} onChange={e => setEditBoardDesc(e.target.value)} rows={2} />
+          </div>
+          <div className="edit-board-field">
+            <Text type="secondary">Cor</Text>
+            <div className="color-picker">
+              {PASTEL_COLORS.map(color => (
+                <div
+                  key={color}
+                  className={`color-option ${editBoardColor === color ? 'selected' : ''}`}
+                  style={{ backgroundColor: color }}
+                  onClick={() => setEditBoardColor(color)}
+                />
+              ))}
+            </div>
           </div>
           <Popconfirm
             title="Excluir este quadro?"
@@ -535,9 +525,9 @@ function BoardPage() {
             cancelText="Cancelar"
             okButtonProps={{ danger: true }}
           >
-            <Button danger>Excluir Quadro</Button>
+            <Button danger className="delete-board-button">Excluir Quadro</Button>
           </Popconfirm>
-        </Space>
+        </div>
       </Modal>
     </Layout>
   );

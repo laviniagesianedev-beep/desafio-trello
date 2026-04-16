@@ -1,0 +1,173 @@
+.card-modal .ant-modal-content {
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.card-modal .ant-modal-header {
+  border-bottom: 1px solid #EEE;
+  padding: 16px 20px;
+}
+
+.card-modal .ant-modal-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.card-modal .ant-modal-body {
+  padding: 20px;
+}
+
+.modal-section {
+  margin-bottom: 16px;
+}
+
+.modal-section-label {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  margin-bottom: 4px;
+  display: block;
+}
+
+.modal-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.label-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 4px;
+}
+
+.selected-labels {
+  margin-top: 8px;
+}
+
+.selected-labels-label {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  margin-bottom: 2px;
+}
+
+.selected-labels-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.label-create-form {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+
+.label-color-grid {
+  display: flex;
+  gap: 3px;
+}
+
+.label-color-swatch {
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  cursor: pointer;
+  border: 1px solid #CCC;
+  transition: border-color 0.15s ease;
+}
+
+.label-color-swatch.selected {
+  border-color: #000;
+  border-width: 2px;
+}
+
+.label-input {
+  width: 120px;
+}
+
+.checklist-item-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.checklist-item-text {
+  flex: 1;
+  font-size: 13px;
+}
+
+.checklist-item-text.done {
+  text-decoration: line-through;
+  color: #999;
+}
+
+.checklist-input-row {
+  margin-top: 8px;
+}
+
+.description-preview {
+  font-size: 13px;
+  color: var(--text-primary);
+  line-height: 1.5;
+  padding: 8px 12px;
+  background: var(--bg-secondary);
+  border-radius: var(--radius-sm);
+  min-height: 40px;
+}
+
+.description-preview p {
+  margin: 0 0 8px;
+}
+
+.description-preview p:last-child {
+  margin-bottom: 0;
+}
+
+.description-preview strong {
+  font-weight: 600;
+}
+
+.description-preview em {
+  font-style: italic;
+}
+
+.description-preview code {
+  background: rgba(0, 0, 0, 0.06);
+  padding: 1px 4px;
+  border-radius: 3px;
+  font-size: 12px;
+  font-family: 'SF Mono', 'Fira Code', monospace;
+}
+
+.description-preview ul,
+.description-preview ol {
+  margin: 4px 0;
+  padding-left: 20px;
+}
+
+.description-preview h1,
+.description-preview h2,
+.description-preview h3 {
+  margin: 8px 0 4px;
+  font-weight: 600;
+}
+
+.description-preview h1 { font-size: 16px; }
+.description-preview h2 { font-size: 15px; }
+.description-preview h3 { font-size: 14px; }
+
+.modal-divider {
+  margin: 12px 0;
+}
+
+.delete-card-button {
+  margin-top: 8px;
+}

@@ -11,11 +11,13 @@ import {
   message,
   Divider,
 } from 'antd';
-import { DeleteOutlined, PlusOutlined } from '@ant-design/icons';
+import { DeleteOutlined, PlusOutlined, EditOutlined, CheckOutlined } from '@ant-design/icons';
 import dayjs, { Dayjs } from 'dayjs';
+import ReactMarkdown from 'react-markdown';
 import { LabelBadge } from './LabelBadge';
 import { cardApi, labelApi, checklistApi } from '../services/api';
 import type { CardData } from './CardItem';
+import './CardModal.css';
 
 const { Text } = Typography;
 const { TextArea } = Input;
@@ -59,6 +61,7 @@ export function CardModal({ card, boardId, open, onClose, onUpdated, onDeleted }
   const [newLabelName, setNewLabelName] = useState('');
   const [newLabelColor, setNewLabelColor] = useState(LABEL_COLORS[0]);
   const [showLabelForm, setShowLabelForm] = useState(false);
+  const [editingDescription, setEditingDescription] = useState(false);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -68,6 +71,7 @@ export function CardModal({ card, boardId, open, onClose, onUpdated, onDeleted }
       setDueDate(card.due_date ? dayjs(card.due_date) : null);
       setLabels(card.labels || []);
       setChecklistItems(card.checklist_items || []);
+      setEditingDescription(false);
       loadBoardLabels();
     }
   }, [card, open]);
@@ -177,6 +181,7 @@ export function CardModal({ card, boardId, open, onClose, onUpdated, onDeleted }
     <Modal
       open={open}
       onCancel={onClose}
+      className="card-modal"
       footer={[
         <Button key="cancel" onClick={onClose}>Cancelar</Button>,
         <Button key="save" type="primary" loading={saving} onClick={handleSave}>
@@ -184,154 +189,170 @@ export function CardModal({ card, boardId, open, onClose, onUpdated, onDeleted }
         </Button>,
       ]}
       width={640}
-      title={<span style={{ fontSize: '1.1rem' }}>{card.title}</span>}
+      title={card.title}
     >
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-        <div>
-          <Text type="secondary" style={{ fontSize: '0.85rem' }}>Título</Text>
-          <Input
-            value={title}
-            onChange={e => setTitle(e.target.value)}
-            placeholder="Título do card"
-          />
-        </div>
+      <div className="modal-section">
+        <label className="modal-section-label">Título</label>
+        <Input
+          value={title}
+          onChange={e => setTitle(e.target.value)}
+          placeholder="Título do card"
+        />
+      </div>
 
-        <div>
-          <Text type="secondary" style={{ fontSize: '0.85rem' }}>Descrição</Text>
-          <TextArea
-            value={description}
-            onChange={e => setDescription(e.target.value)}
-            placeholder="Adicione uma descrição..."
-            rows={3}
-          />
-        </div>
-
-        <div>
-          <Text type="secondary" style={{ fontSize: '0.85rem' }}>Data de entrega</Text>
-          <DatePicker
-            value={dueDate}
-            onChange={setDueDate}
-            style={{ width: '100%' }}
-            format="DD/MM/YYYY"
-            placeholder="Selecione uma data"
-          />
-        </div>
-
-        <div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-            <Text type="secondary" style={{ fontSize: '0.85rem' }}>Labels</Text>
-            <Button size="small" type="link" onClick={() => setShowLabelForm(!showLabelForm)}>
-              {showLabelForm ? 'Cancelar' : '+ Criar label'}
+      <div className="modal-section">
+        <div className="modal-section-header">
+          <label className="modal-section-label">Descrição</label>
+          {!editingDescription && description && (
+            <Button size="small" type="link" icon={<EditOutlined />} onClick={() => setEditingDescription(true)}>
+              Editar
             </Button>
-          </div>
-
-          {showLabelForm && (
-            <Space style={{ marginBottom: 8 }}>
-              <Input
-                size="small"
-                placeholder="Nome do label"
-                value={newLabelName}
-                onChange={e => setNewLabelName(e.target.value)}
-                style={{ width: 120 }}
-              />
-              <Space size={4}>
-                {LABEL_COLORS.slice(0, 6).map(color => (
-                  <div
-                    key={color}
-                    onClick={() => setNewLabelColor(color)}
-                    style={{
-                      width: 20,
-                      height: 20,
-                      borderRadius: 4,
-                      backgroundColor: color,
-                      cursor: 'pointer',
-                      border: newLabelColor === color ? '2px solid #000' : '1px solid #ccc',
-                    }}
-                  />
-                ))}
-              </Space>
-              <Button size="small" type="primary" onClick={handleCreateLabel}>
-                Criar
-              </Button>
-            </Space>
-          )}
-
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
-            {boardLabels.map(label => (
-              <LabelBadge
-                key={label.id}
-                name={label.name}
-                color={label.color}
-                onClick={() => toggleLabel(label)}
-              />
-            ))}
-          </div>
-          {labels.length > 0 && (
-            <div style={{ marginTop: 8 }}>
-              <Text type="secondary" style={{ fontSize: '0.8rem' }}>Selecionados:</Text>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginTop: 4 }}>
-                {labels.map(label => (
-                  <LabelBadge
-                    key={label.id}
-                    name={label.name}
-                    color={label.color}
-                    removable
-                    onRemove={() => toggleLabel(label)}
-                  />
-                ))}
-              </div>
-            </div>
           )}
         </div>
+        {editingDescription || !description ? (
+          <>
+            <TextArea
+              value={description}
+              onChange={e => setDescription(e.target.value)}
+              placeholder="Adicione uma descrição... (suporta Markdown)"
+              rows={4}
+            />
+            {description && (
+              <Button
+                size="small"
+                type="link"
+                icon={<CheckOutlined />}
+                onClick={() => setEditingDescription(false)}
+                className="checklist-input-row"
+              >
+                Concluir edição
+              </Button>
+            )}
+          </>
+        ) : (
+          <div className="description-preview" onClick={() => setEditingDescription(true)}>
+            <ReactMarkdown>{description}</ReactMarkdown>
+          </div>
+        )}
+      </div>
 
-        <Divider style={{ margin: '8px 0' }} />
+      <div className="modal-section">
+        <label className="modal-section-label">Data de entrega</label>
+        <DatePicker
+          value={dueDate}
+          onChange={setDueDate}
+          className="modal-date-picker"
+          style={{ width: '100%' }}
+          format="DD/MM/YYYY"
+          placeholder="Selecione uma data"
+        />
+      </div>
 
-        <div>
-          <Text type="secondary" style={{ fontSize: '0.85rem' }}>
-            Checklist {checklistTotal > 0 && `(${checklistDone}/${checklistTotal})`}
-          </Text>
-          {checklistItems.map(item => (
-            <div key={item.id} style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 4 }}>
-              <Checkbox
-                checked={item.is_checked}
-                onChange={() => handleToggleChecklistItem(item)}
-              />
-              <span style={{ flex: 1, textDecoration: item.is_checked ? 'line-through' : 'none', color: item.is_checked ? '#999' : 'inherit' }}>
-                {item.content}
-              </span>
-              <Button type="text" size="small" danger icon={<DeleteOutlined />} onClick={() => handleDeleteChecklistItem(item.id)} />
-            </div>
-          ))}
-          <Space style={{ marginTop: 8 }}>
+      <div className="modal-section">
+        <div className="modal-section-header">
+          <label className="modal-section-label">Labels</label>
+          <Button size="small" type="link" onClick={() => setShowLabelForm(!showLabelForm)}>
+            {showLabelForm ? 'Cancelar' : '+ Criar label'}
+          </Button>
+        </div>
+
+        {showLabelForm && (
+          <div className="label-create-form">
             <Input
               size="small"
-              placeholder="Novo item..."
-              value={newChecklistItem}
-              onChange={e => setNewChecklistItem(e.target.value)}
-              onPressEnter={handleAddChecklistItem}
-              style={{ width: 200 }}
+              placeholder="Nome do label"
+              value={newLabelName}
+              onChange={e => setNewLabelName(e.target.value)}
+              className="label-input"
             />
-            <Button size="small" icon={<PlusOutlined />} onClick={handleAddChecklistItem}>
-              Adicionar
-            </Button>
-          </Space>
+            <div className="label-color-grid">
+              {LABEL_COLORS.slice(0, 7).map(color => (
+                <div
+                  key={color}
+                  className={`label-color-swatch ${newLabelColor === color ? 'selected' : ''}`}
+                  style={{ backgroundColor: color }}
+                  onClick={() => setNewLabelColor(color)}
+                />
+              ))}
+            </div>
+            <Button size="small" type="primary" onClick={handleCreateLabel}>Criar</Button>
+          </div>
+        )}
+
+        <div className="label-list">
+          {boardLabels.map(label => (
+            <LabelBadge
+              key={label.id}
+              name={label.name}
+              color={label.color}
+              onClick={() => toggleLabel(label)}
+            />
+          ))}
         </div>
-
-        <Divider style={{ margin: '8px 0' }} />
-
-        <Popconfirm
-          title="Excluir este card?"
-          description="Esta ação não pode ser desfeita."
-          onConfirm={handleDelete}
-          okText="Excluir"
-          cancelText="Cancelar"
-          okButtonProps={{ danger: true }}
-        >
-          <Button danger icon={<DeleteOutlined />}>
-            Excluir card
-          </Button>
-        </Popconfirm>
+        {labels.length > 0 && (
+          <div className="selected-labels">
+            <Text type="secondary" className="selected-labels-label">Selecionados:</Text>
+            <div className="selected-labels-list">
+              {labels.map(label => (
+                <LabelBadge
+                  key={label.id}
+                  name={label.name}
+                  color={label.color}
+                  removable
+                  onRemove={() => toggleLabel(label)}
+                />
+              ))}
+            </div>
+          </div>
+        )}
       </div>
+
+      <Divider className="modal-divider" />
+
+      <div className="modal-section">
+        <label className="modal-section-label">
+          Checklist {checklistTotal > 0 && `(${checklistDone}/${checklistTotal})`}
+        </label>
+        {checklistItems.map(item => (
+          <div key={item.id} className="checklist-item-row">
+            <Checkbox
+              checked={item.is_checked}
+              onChange={() => handleToggleChecklistItem(item)}
+            />
+            <span className={`checklist-item-text ${item.is_checked ? 'done' : ''}`}>
+              {item.content}
+            </span>
+            <Button type="text" size="small" danger icon={<DeleteOutlined />} onClick={() => handleDeleteChecklistItem(item.id)} />
+          </div>
+        ))}
+        <Space className="checklist-input-row">
+          <Input
+            size="small"
+            placeholder="Novo item..."
+            value={newChecklistItem}
+            onChange={e => setNewChecklistItem(e.target.value)}
+            onPressEnter={handleAddChecklistItem}
+          />
+          <Button size="small" icon={<PlusOutlined />} onClick={handleAddChecklistItem}>
+            Adicionar
+          </Button>
+        </Space>
+      </div>
+
+      <Divider className="modal-divider" />
+
+      <Popconfirm
+        title="Excluir este card?"
+        description="Esta ação não pode ser desfeita."
+        onConfirm={handleDelete}
+        okText="Excluir"
+        cancelText="Cancelar"
+        okButtonProps={{ danger: true }}
+      >
+        <Button danger icon={<DeleteOutlined />} className="delete-card-button">
+          Excluir card
+        </Button>
+      </Popconfirm>
     </Modal>
   );
 }

@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Layout,
-  Card,
   Button,
   Modal,
   Form,
@@ -14,7 +13,7 @@ import {
   message,
   Spin,
   Empty,
-  Tag
+  Tag,
 } from 'antd';
 import {
   PlusOutlined,
@@ -23,7 +22,7 @@ import {
   LogoutOutlined,
   FolderOutlined,
   StarOutlined,
-  ClockCircleOutlined
+  ClockCircleOutlined,
 } from '@ant-design/icons';
 import { useAuthStore } from '../store/authStore';
 import { useBoardStore } from '../store/boardStore';
@@ -34,10 +33,9 @@ const { Header, Content } = Layout;
 const { Title, Text } = Typography;
 const { TextArea } = Input;
 
-// Cores pastéis para quadros
 const PASTEL_COLORS = [
-  '#A8D8EA', '#AA96DA', '#FCBAD3', '#FFFFD2', 
-  '#FFD3B6', '#FFAAA5', '#A8E6CF', '#C7CEEA'
+  '#A8D8EA', '#AA96DA', '#FCBAD3', '#FFFFD2',
+  '#FFD3B6', '#FFAAA5', '#A8E6CF', '#C7CEEA',
 ];
 
 interface BoardData {
@@ -64,7 +62,6 @@ function DashboardPage() {
   const [selectedColor, setSelectedColor] = useState(PASTEL_COLORS[0]);
   const [form] = Form.useForm();
 
-  // Carregar quadros
   useEffect(() => {
     loadBoards();
   }, []);
@@ -74,7 +71,7 @@ function DashboardPage() {
     try {
       const response = await boardApi.getAll();
       setBoards(response.data);
-    } catch (error) {
+    } catch {
       message.error('Erro ao carregar quadros');
     } finally {
       setLoading(false);
@@ -88,23 +85,22 @@ function DashboardPage() {
         description: values.description,
         background: selectedColor,
       });
-      
       message.success('Quadro criado com sucesso!');
       setCreateModalOpen(false);
       form.resetFields();
       navigate(`/board/${response.data.id}`);
-    } catch (error) {
+    } catch {
       message.error('Erro ao criar quadro');
     }
   };
 
   const handleLogout = async () => {
     try {
-      await boardApi.getAll(); // Garantir que a API está acessível
+      await boardApi.getAll();
       logout();
       message.success('Logout realizado com sucesso!');
       navigate('/login');
-    } catch (error) {
+    } catch {
       logout();
       navigate('/login');
     }
@@ -115,7 +111,6 @@ function DashboardPage() {
     const now = new Date();
     const diff = now.getTime() - date.getTime();
     const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-    
     if (days === 0) return 'Hoje';
     if (days === 1) return 'Ontem';
     if (days < 7) return `${days} dias atrás`;
@@ -123,57 +118,38 @@ function DashboardPage() {
   };
 
   const userMenuItems = [
-    {
-      key: 'profile',
-      icon: <SettingOutlined />,
-      label: 'Configurações',
-    },
-    {
-      type: 'divider' as const,
-    },
-    {
-      key: 'logout',
-      icon: <LogoutOutlined />,
-      label: 'Sair',
-      onClick: handleLogout,
-    },
+    { key: 'profile', icon: <SettingOutlined />, label: 'Configurações' },
+    { type: 'divider' as const },
+    { key: 'logout', icon: <LogoutOutlined />, label: 'Sair', onClick: handleLogout },
   ];
 
   const renderBoardCard = (board: BoardData) => (
-    <Card
+    <div
       key={board.id}
       className="board-card"
-      hoverable
       onClick={() => navigate(`/board/${board.id}`)}
-      style={{ backgroundColor: board.background }}
-      cover={
-        <div className="board-card-cover" style={{ backgroundColor: board.background }}>
-          <div className="board-card-overlay">
-            <Title level={4} className="board-card-title">
-              {board.title}
-            </Title>
-            {board.description && (
-              <Text className="board-card-description" ellipsis>
-                {board.description}
-              </Text>
-            )}
-          </div>
-        </div>
-      }
     >
-      <div className="board-card-meta">
+      <div className="board-card-cover" style={{ backgroundColor: board.background }}>
+        <div className="board-card-gradient">
+          <Title level={4} className="board-card-title">{board.title}</Title>
+          {board.description && (
+            <Text className="board-card-description" ellipsis>{board.description}</Text>
+          )}
+        </div>
+      </div>
+      <div className="board-card-footer">
         <Space size="small">
-          <Tag icon={<FolderOutlined />}>{board.lists_count || 0} listas</Tag>
-          <Tag icon={<StarOutlined />}>{board.cards_count || 0} cards</Tag>
+          <Tag className="board-card-tag"><FolderOutlined /> {board.lists_count || 0}</Tag>
+          <Tag className="board-card-tag"><StarOutlined /> {board.cards_count || 0}</Tag>
           {(board.members_count ?? 0) > 1 && (
-            <Tag icon={<TeamOutlined />}>{board.members_count} membros</Tag>
+            <Tag className="board-card-tag"><TeamOutlined /> {board.members_count}</Tag>
           )}
         </Space>
         <Text className="board-card-date">
           <ClockCircleOutlined /> {formatDate(board.updated_at)}
         </Text>
       </div>
-    </Card>
+    </div>
   );
 
   return (
@@ -184,20 +160,20 @@ function DashboardPage() {
             <span className="logo-text">Boardy</span>
           </div>
         </div>
-        
+
         <div className="header-right">
-          <Button 
-            type="primary" 
+          <Button
+            type="primary"
             icon={<PlusOutlined />}
             onClick={() => setCreateModalOpen(true)}
             className="create-button"
           >
             Criar Quadro
           </Button>
-          
+
           <Dropdown menu={{ items: userMenuItems }} placement="bottomRight">
             <div className="user-avatar">
-              <Avatar size={36} style={{ backgroundColor: '#A8D8EA' }}>
+              <Avatar size={34} className="user-avatar-img">
                 {user?.name?.charAt(0).toUpperCase()}
               </Avatar>
               <span className="user-name">{user?.name}</span>
@@ -214,7 +190,6 @@ function DashboardPage() {
             </div>
           ) : (
             <>
-              {/* Quadros próprios */}
               {boards.owned.length > 0 && (
                 <section className="boards-section">
                   <div className="section-header">
@@ -229,7 +204,6 @@ function DashboardPage() {
                 </section>
               )}
 
-              {/* Quadros compartilhados */}
               {boards.member.length > 0 && (
                 <section className="boards-section">
                   <div className="section-header">
@@ -244,7 +218,6 @@ function DashboardPage() {
                 </section>
               )}
 
-              {/* Estado vazio */}
               {boards.owned.length === 0 && boards.member.length === 0 && (
                 <Empty
                   image={Empty.PRESENTED_IMAGE_SIMPLE}
@@ -256,8 +229,8 @@ function DashboardPage() {
                   }
                   className="empty-state"
                 >
-                  <Button 
-                    type="primary" 
+                  <Button
+                    type="primary"
                     icon={<PlusOutlined />}
                     onClick={() => setCreateModalOpen(true)}
                     size="large"
@@ -271,7 +244,6 @@ function DashboardPage() {
         </div>
       </Content>
 
-      {/* Modal de Criar Quadro */}
       <Modal
         title="Criar Novo Quadro"
         open={createModalOpen}
@@ -299,16 +271,8 @@ function DashboardPage() {
             <Input placeholder="Ex: Projeto Marketing" size="large" />
           </Form.Item>
 
-          <Form.Item
-            name="description"
-            label="Descrição (opcional)"
-          >
-            <TextArea 
-              placeholder="Descreva o propósito deste quadro..."
-              rows={3}
-              maxLength={1000}
-              showCount
-            />
+          <Form.Item name="description" label="Descrição (opcional)">
+            <TextArea placeholder="Descreva o propósito deste quadro..." rows={3} maxLength={1000} showCount />
           </Form.Item>
 
           <Form.Item label="Cor do Quadro">
@@ -325,14 +289,10 @@ function DashboardPage() {
           </Form.Item>
 
           <Form.Item>
-            <Space style={{ width: '100%', justifyContent: 'flex-end' }}>
-              <Button onClick={() => setCreateModalOpen(false)}>
-                Cancelar
-              </Button>
-              <Button type="primary" htmlType="submit">
-                Criar Quadro
-              </Button>
-            </Space>
+            <div className="form-actions">
+              <Button onClick={() => setCreateModalOpen(false)}>Cancelar</Button>
+              <Button type="primary" htmlType="submit">Criar Quadro</Button>
+            </div>
           </Form.Item>
         </Form>
       </Modal>

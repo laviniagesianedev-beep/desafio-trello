@@ -69,4 +69,16 @@ class ListModel extends Model
         $maxPosition = $this->board->lists()->max('position');
         return $maxPosition ? $maxPosition + 1 : 1;
     }
+
+    /**
+     * Reorganizar posições dos cards
+     */
+    public function reorganizeCards()
+    {
+        $cards = $this->cards()->orderBy('position')->get();
+        foreach ($cards as $index => $card) {
+            $card->position = $index + 1;
+            $card->save();
+        }
+    }
 }

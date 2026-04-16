@@ -120,7 +120,8 @@ export const listApi = {
   reorder: (id: number, position: number) =>
     api.put(`/lists/${id}/reorder`, { position }),
   
-  delete: (id: number) => api.delete(`/lists/${id}`),
+  delete: (id: number, moveTo?: number) =>
+    api.delete(`/lists/${id}`, { data: moveTo ? { move_to_list_id: moveTo } : {} }),
 };
 
 // Serviços de Cards

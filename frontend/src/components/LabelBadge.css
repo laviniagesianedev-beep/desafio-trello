@@ -1,0 +1,23 @@
+.label-badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.75rem;
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  cursor: default;
+  border: 1px solid;
+  transition: opacity 0.15s ease;
+}
+
+.label-badge.clickable {
+  cursor: pointer;
+}
+
+.label-badge.clickable:hover {
+  opacity: 0.85;
+}
+
+.label-badge.small {
+  font-size: 0.7rem;
+  padding: 0 4px;
+}

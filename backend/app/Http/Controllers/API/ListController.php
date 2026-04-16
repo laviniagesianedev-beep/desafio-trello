@@ -5,11 +5,18 @@ namespace App\Http\Controllers\API;
 use App\Http\Controllers\Controller;
 use App\Models\Board;
 use App\Models\ListModel;
+use App\Services\ReorderService;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 
 class ListController extends Controller
 {
+    private ReorderService $reorderService;
+
+    public function __construct(ReorderService $reorderService)
+    {
+        $this->reorderService = $reorderService;
+    }
     /**
      * Listar listas de um quadro
      */
@@ -170,7 +177,6 @@ class ListController extends Controller
             $user = $request->user();
             $board = $list->board;
 
-            // Verificar permissão (apenas admin, moderador ou normal)
             if ($board->user_id !== $user->id) {
                 $role = $board->getMemberRole($user->id);
                 if (!in_array($role, ['admin', 'moderator', 'normal'])) {
@@ -184,7 +190,7 @@ class ListController extends Controller
                 'position' => 'required|integer|min:1',
             ]);
 
-            $list->moveTo($validated['position']);
+            $list = $this->reorderService->reorderList($id, $validated['position']);
 
             return response()->json($list);
 
@@ -202,7 +208,7 @@ class ListController extends Controller
     }
 
     /**
-     * Excluir lista
+     * Excluir lista (com opção de mover cards)
      */
     public function destroy(Request $request, $id)
     {
@@ -211,7 +217,6 @@ class ListController extends Controller
             $user = $request->user();
             $board = $list->board;
 
-            // Verificar permissão (apenas admin, moderador ou dono)
             if ($board->user_id !== $user->id) {
                 $role = $board->getMemberRole($user->id);
                 if (!in_array($role, ['admin', 'moderator'])) {
@@ -221,12 +226,41 @@ class ListController extends Controller
                 }
             }
 
+            $validated = $request->validate([
+                'move_to_list_id' => 'sometimes|integer|exists:lists,id',
+            ]);
+
+            $moveToListId = $validated['move_to_list_id'] ?? null;
+
+            if ($moveToListId) {
+                $moveToList = ListModel::findOrFail($moveToListId);
+                if ($moveToList->board_id !== $board->id) {
+                    return response()->json([
+                        'message' => 'A lista destino pertence a outro quadro',
+                    ], 400);
+                }
+
+                $list->cards->each(function ($card) use ($moveToListId) {
+                    $card->list_id = $moveToListId;
+                    $card->position = $card->getNextPosition();
+                    $card->save();
+                });
+
+                $moveToList->load('cards');
+                $moveToList->reorganizeCards();
+            }
+
             $list->delete();
 
             return response()->json([
-                'message' => 'Lista excluída com sucesso',
+                'message' => $moveToListId ? 'Lista excluída e cards movidos com sucesso' : 'Lista excluída com sucesso',
             ]);
 
+        } catch (ValidationException $e) {
+            return response()->json([
+                'message' => 'Dados inválidos',
+                'errors' => $e->errors(),
+            ], 422);
         } catch (\Exception $e) {
             return response()->json([
                 'message' => 'Erro ao excluir lista',
