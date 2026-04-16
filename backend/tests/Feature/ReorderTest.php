@@ -20,7 +20,11 @@ class ReorderTest extends TestCase
     {
         parent::setUp();
         $this->user = User::factory()->create();
-        $this->board = Board::factory()->create(['user_id' => $this->user->id]);
+        $this->board = Board::create([
+            'user_id' => $this->user->id,
+            'title' => 'Quadro Teste',
+            'background' => '#A8D8EA',
+        ]);
     }
 
     private function authHeaders(): array
@@ -31,7 +35,7 @@ class ReorderTest extends TestCase
 
     private function createList(string $title = 'Lista Teste', int $position = 1): ListModel
     {
-        return ListModel::factory()->create([
+        return ListModel::create([
             'board_id' => $this->board->id,
             'title' => $title,
             'position' => $position,
@@ -40,8 +44,9 @@ class ReorderTest extends TestCase
 
     private function createCard(ListModel $list, string $title = 'Card Teste', int $position = 1): Card
     {
-        return Card::factory()->create([
+        return Card::create([
             'list_id' => $list->id,
+            'user_id' => $this->user->id,
             'title' => $title,
             'position' => $position,
         ]);
@@ -58,11 +63,6 @@ class ReorderTest extends TestCase
             ->putJson("/api/cards/{$card3->id}/reorder", ['position' => 1]);
 
         $response->assertStatus(200);
-
-        $card1->refresh();
-        $card2->refresh();
-        $card3->refresh();
-
         $this->assertEquals(1, $card3->fresh()->position);
         $this->assertEquals(2, $card1->fresh()->position);
         $this->assertEquals(3, $card2->fresh()->position);
@@ -78,7 +78,6 @@ class ReorderTest extends TestCase
             ->putJson("/api/cards/{$card1->id}/reorder", ['position' => 1]);
 
         $response->assertStatus(200);
-
         $this->assertEquals(1, $card1->fresh()->position);
         $this->assertEquals(2, $card2->fresh()->position);
     }
@@ -96,16 +95,21 @@ class ReorderTest extends TestCase
             ]);
 
         $response->assertStatus(200);
-
         $this->assertEquals($list2->id, $card->fresh()->list_id);
         $this->assertEquals(1, $card->fresh()->position);
     }
 
     public function test_move_card_to_different_board_fails()
     {
-        $otherBoard = Board::factory()->create(['user_id' => $this->user->id]);
-        $otherList = ListModel::factory()->create([
+        $otherUser = User::factory()->create();
+        $otherBoard = Board::create([
+            'user_id' => $otherUser->id,
+            'title' => 'Outro Quadro',
+            'background' => '#FFD3B6',
+        ]);
+        $otherList = ListModel::create([
             'board_id' => $otherBoard->id,
+            'title' => 'Outra Lista',
             'position' => 1,
         ]);
 
@@ -131,7 +135,6 @@ class ReorderTest extends TestCase
             ->putJson("/api/lists/{$list3->id}/reorder", ['position' => 1]);
 
         $response->assertStatus(200);
-
         $this->assertEquals(1, $list3->fresh()->position);
         $this->assertEquals(2, $list1->fresh()->position);
         $this->assertEquals(3, $list2->fresh()->position);
@@ -151,7 +154,6 @@ class ReorderTest extends TestCase
             ->getJson("/api/boards/{$this->board->id}");
 
         $response->assertStatus(200);
-
         $cards = $response->json('lists.0.cards');
         $this->assertEquals('Card C', $cards[0]['title']);
         $this->assertEquals('Card A', $cards[1]['title']);

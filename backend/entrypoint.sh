@@ -13,8 +13,12 @@ if [ ! -f "$DB_SOURCE" ]; then
     echo "Banco criado: $DB_SOURCE"
 fi
 
-echo "[2/6] Instalando dependencias PHP..."
-composer install --no-interaction --optimize-autoloader 2>/dev/null || composer install --no-interaction
+echo "[2/6] Verificando dependencias PHP..."
+if [ ! -f "/var/www/vendor/autoload.php" ]; then
+    composer install --no-interaction --optimize-autoloader 2>/dev/null || composer install --no-interaction
+else
+    echo "Dependencias ja instaladas, pulando..."
+fi
 
 echo "[3/6] Gerando chave da aplicacao..."
 if grep -q "APP_KEY=base64:" /var/www/.env; then

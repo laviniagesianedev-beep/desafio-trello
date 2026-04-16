@@ -64,7 +64,7 @@ class AuthTest extends TestCase
 
         $response = $this->withHeaders([
             'Authorization' => "Bearer $token",
-        ])->postJson('/api/auth/logout');
+        ])->postJson('/api/logout');
 
         $response->assertStatus(200)
                  ->assertJson(['message' => 'Logout realizado com sucesso']);
