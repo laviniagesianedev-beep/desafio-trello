@@ -606,37 +606,86 @@
 }
 
 @media (max-width: 480px) {
+  .board-header {
+    padding: 0 8px;
+    height: 50px;
+  }
+
+  .header-left {
+    gap: 8px;
+  }
+
+  .back-button {
+    width: 32px;
+    height: 32px;
+  }
+
+  .board-title {
+    font-size: 14px !important;
+    max-width: 100px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .board-description {
+    display: none;
+  }
+
   .board-members {
     display: none;
   }
 
-  .archived-toggle span {
+  .header-right {
+    gap: 4px;
+  }
+
+  .board-filters {
     display: none;
   }
 
-  .archived-toggle {
+  .archived-toggle span,
+  .create-list-button span {
+    display: none;
+  }
+
+  .archived-toggle,
+  .create-list-button {
     width: 36px;
+    height: 36px;
     padding: 0;
     display: flex;
     align-items: center;
     justify-content: center;
-  }
-
-  .create-list-button span {
-    display: none;
+    min-width: 36px;
   }
 
   .more-button {
     display: none;
   }
 
+  .board-content {
+    padding: 8px;
+  }
+
   .lists-container {
     flex-direction: column;
+    gap: 8px;
   }
 
   .list-column {
     width: 100%;
     min-width: 0;
+    max-height: none;
+    padding: 8px;
+  }
+
+  .list-title {
+    font-size: 13px !important;
+  }
+
+  .list-cards {
+    max-height: none;
   }
 
   .add-list-form {
@@ -652,5 +701,45 @@
 
   .filter-search {
     display: none;
+  }
+
+  .board-empty {
+    padding-top: 24px;
+  }
+
+  .board-empty p {
+    font-size: 13px;
+  }
+
+  .archived-section {
+    margin-top: 16px;
+    padding-top: 16px;
+  }
+
+  .archived-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .archived-cards {
+    gap: 6px;
+  }
+
+  .archived-card {
+    padding: 8px 12px;
+  }
+
+  .archived-card-title {
+    font-size: 12px;
+  }
+
+  .skeleton-lists {
+    gap: 8px;
+  }
+
+  .skeleton-header {
+    flex-direction: column;
+    gap: 8px;
   }
 }

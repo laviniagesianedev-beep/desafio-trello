@@ -162,20 +162,22 @@
 
 /* Tooltip customizado */
 .custom-tooltip {
-  background: var(--pastel-purple) !important;
+  background: #FFF !important;
+  border: 1px solid #E8ECF0 !important;
   border-radius: var(--radius-sm) !important;
   padding: 8px 12px !important;
   font-size: 13px !important;
-  box-shadow: var(--shadow-medium) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
 }
 
 .custom-tooltip .ant-tooltip-arrow::before {
-  background: var(--pastel-purple) !important;
+  background: #FFF !important;
 }
 
 .custom-tooltip .ant-tooltip-inner {
-  color: #FFF !important;
+  color: var(--text-primary) !important;
   background: transparent !important;
+  padding: 0 !important;
 }
 
 /* Modal backdrop */

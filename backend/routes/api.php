@@ -12,6 +12,15 @@ use App\Domain\Members\Http\Controllers\MemberController;
 use App\Domain\Labels\Http\Controllers\LabelController;
 use App\Domain\Checklist\Http\Controllers\ChecklistItemController;
 
+// Restrições de rota para evitar conflitos
+Route::pattern('board', '[0-9]+');
+Route::pattern('list', '[0-9]+');
+Route::pattern('card', '[0-9]+');
+Route::pattern('attachment', '[0-9]+');
+Route::pattern('label', '[0-9]+');
+Route::pattern('item', '[0-9]+');
+Route::pattern('member', '[0-9]+');
+
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -35,11 +44,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     
     // Quadros
-    Route::apiResource('boards', BoardController::class);
     Route::get('/boards/shared', [BoardController::class, 'shared']);
     Route::get('/boards/archived', [BoardController::class, 'archived']);
     Route::put('/boards/{board}/archive', [BoardController::class, 'archive']);
     Route::put('/boards/{board}/restore', [BoardController::class, 'restore']);
+    Route::apiResource('boards', BoardController::class);
     
     // Listas (dentro de um quadro)
     Route::apiResource('boards.lists', ListController::class)->shallow();
@@ -59,6 +68,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Anexos
     Route::apiResource('cards.attachments', AttachmentController::class)->shallow();
     Route::get('/attachments/{attachment}/download', [AttachmentController::class, 'download']);
+    Route::get('/attachments/{attachment}/preview', [AttachmentController::class, 'preview']);
     
     // Membros
     Route::apiResource('boards.members', MemberController::class)->shallow();

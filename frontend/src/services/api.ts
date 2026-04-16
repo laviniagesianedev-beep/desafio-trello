@@ -214,6 +214,8 @@ export const attachmentApi = {
   download: (id: number) => 
     api.get(`/attachments/${id}/download`, { responseType: 'blob' }),
   
+  preview: (id: number) => api.get(`/attachments/${id}/preview`),
+  
   delete: (id: number) => api.delete(`/attachments/${id}`),
 };
 

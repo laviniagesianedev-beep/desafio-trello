@@ -57,6 +57,22 @@
   font-size: 14px;
   line-height: 1.5;
   color: var(--text-primary);
+  max-height: 300px;
+  overflow-y: auto;
+  padding-right: 8px;
+}
+
+.editor-content .ProseMirror::-webkit-scrollbar {
+  width: 6px;
+}
+
+.editor-content .ProseMirror::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.editor-content .ProseMirror::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: 3px;
 }
 
 .editor-content .ProseMirror p {

@@ -148,6 +148,45 @@ class AttachmentController extends Controller
     }
 
     /**
+     * Obter URL do anexo para preview
+     */
+    public function preview(Request $request, $id)
+    {
+        try {
+            $attachment = Attachment::findOrFail($id);
+            $user = $request->user();
+            $board = $attachment->card->list->board;
+
+            // Verificar permissão
+            if (!$board->hasMember($user->id) && $board->user_id !== $user->id) {
+                return response()->json([
+                    'message' => 'Você não tem permissão para acessar este anexo',
+                ], 403);
+            }
+
+            if (!Storage::disk('public')->exists($attachment->file_path)) {
+                return response()->json([
+                    'message' => 'Arquivo não encontrado',
+                ], 404);
+            }
+
+            $url = Storage::disk('public')->url($attachment->file_path);
+
+            return response()->json([
+                'url' => $url,
+                'file_name' => $attachment->file_name,
+                'file_type' => $attachment->file_type,
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Erro ao obter preview',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
      * Excluir anexo
      */
     public function destroy(Request $request, $id)

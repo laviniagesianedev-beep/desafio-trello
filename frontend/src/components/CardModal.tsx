@@ -85,9 +85,13 @@ export function CardModal({ card, boardId, listId, mode, open, onClose, onUpdate
   const [editingCommentContent, setEditingCommentContent] = useState('');
   const [updatingComment, setUpdatingComment] = useState(false);
   const [submittingComment, setSubmittingComment] = useState(false);
-  const [attachments, setAttachments] = useState<{ id: number; file_name: string; file_size: number; created_at: string }[]>([]);
+  const [attachments, setAttachments] = useState<{ id: number; file_name: string; file_size: number; file_type?: string; created_at: string }[]>([]);
   const [uploading, setUploading] = useState(false);
   const [deletingAttachmentId, setDeletingAttachmentId] = useState<number | null>(null);
+  const [previewModalOpen, setPreviewModalOpen] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [previewFileName, setPreviewFileName] = useState('');
+  const [previewLoading, setPreviewLoading] = useState(false);
 
   const isCreate = mode === 'create';
 
@@ -250,6 +254,25 @@ export function CardModal({ card, boardId, listId, mode, open, onClose, onUpdate
     } catch {
       message.error('Erro ao remover item');
     }
+  };
+
+  const handlePreviewAttachment = async (att: { id: number; file_name: string; file_type?: string }) => {
+    setPreviewLoading(true);
+    try {
+      const { data } = await attachmentApi.preview(att.id);
+      setPreviewUrl(data.url);
+      setPreviewFileName(data.file_name);
+      setPreviewModalOpen(true);
+    } catch {
+      message.error('Erro ao carregar preview');
+    } finally {
+      setPreviewLoading(false);
+    }
+  };
+
+  const isImageFile = (fileType?: string) => {
+    if (!fileType) return false;
+    return fileType.startsWith('image/');
   };
 
   const handleCreateLabel = async () => {
@@ -576,16 +599,15 @@ export function CardModal({ card, boardId, listId, mode, open, onClose, onUpdate
                           </div>
                           {comment.can_edit && (
                             <Button 
-                              type="link" 
+                              type="text" 
                               size="small" 
                               icon={<EditOutlined />}
+                              className="edit-comment-button"
                               onClick={() => {
                                 setEditingCommentId(comment.id);
                                 setEditingCommentContent(comment.content);
                               }}
-                            >
-                              Editar
-                            </Button>
+                            />
                           )}
                         </>
                       )}
@@ -604,8 +626,9 @@ export function CardModal({ card, boardId, listId, mode, open, onClose, onUpdate
                   />
                   <Button
                     type="primary"
-                    icon={submittingComment ? <Spin size="small" /> : <Text style={{ fontSize: 16, fontWeight: 'bold' }}>{'>'}</Text>}
+                    icon={submittingComment ? <Spin size="small" /> : <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#FFF' }}>{'>'}</Text>}
                     loading={submittingComment}
+                    className="submit-comment-button"
                     onClick={async () => {
                       if (!newComment.trim() || newComment === '<p></p>') return;
                       setSubmittingComment(true);
@@ -621,9 +644,7 @@ export function CardModal({ card, boardId, listId, mode, open, onClose, onUpdate
                         }
                       });
                     }}
-                  >
-                    Comentar
-                  </Button>
+                  />
                 </div>
               </div>
 
@@ -638,7 +659,15 @@ export function CardModal({ card, boardId, listId, mode, open, onClose, onUpdate
                   {attachments.map(att => (
                     <div key={att.id} className="attachment-item">
                       <PaperClipOutlined />
-                      <span className="attachment-name">{att.file_name}</span>
+                      <Button
+                        type="link"
+                        size="small"
+                        className="attachment-name"
+                        onClick={() => handlePreviewAttachment(att)}
+                        loading={previewLoading}
+                      >
+                        {att.file_name}
+                      </Button>
                       <Text type="secondary" className="attachment-size">
                         {Math.round(att.file_size / 1024)} KB
                       </Text>
@@ -727,6 +756,44 @@ export function CardModal({ card, boardId, listId, mode, open, onClose, onUpdate
           )}
         </div>
       </Spin>
+
+      <Modal
+        title={previewFileName}
+        open={previewModalOpen}
+        onCancel={() => {
+          setPreviewModalOpen(false);
+          setPreviewUrl(null);
+        }}
+        footer={[
+          <Button key="download" type="primary" icon={<PaperClipOutlined />} onClick={() => {
+            if (previewUrl) {
+              window.open(previewUrl, '_blank');
+            }
+          }}>
+            Abrir em nova aba
+          </Button>,
+        ]}
+        width={800}
+      >
+        <Spin spinning={previewLoading}>
+          {previewUrl && isImageFile(attachments.find(a => a.file_name === previewFileName)?.file_type) ? (
+            <img 
+              src={previewUrl} 
+              alt={previewFileName} 
+              style={{ maxWidth: '100%', maxHeight: '70vh', objectFit: 'contain' }} 
+            />
+          ) : previewUrl ? (
+            <div style={{ textAlign: 'center', padding: '40px' }}>
+              <PaperClipOutlined style={{ fontSize: 48, color: '#999' }} />
+              <p style={{ marginTop: 16 }}>Clique em "Abrir em nova aba" para visualizar o arquivo</p>
+            </div>
+          ) : (
+            <div style={{ textAlign: 'center', padding: '40px' }}>
+              <Text type="secondary">Carregando preview...</Text>
+            </div>
+          )}
+        </Spin>
+      </Modal>
     </Modal>
   );
 }

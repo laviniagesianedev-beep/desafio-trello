@@ -91,7 +91,8 @@ function DashboardPage() {
     setLoadingArchived(true);
     try {
       const response = await boardApi.getArchived();
-      setArchivedBoards(response.data);
+      const { owned, member } = response.data;
+      setArchivedBoards([...(owned || []), ...(member || [])]);
     } catch {
       message.error('Erro ao carregar quadros arquivados');
     } finally {

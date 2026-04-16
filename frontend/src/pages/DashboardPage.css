@@ -364,6 +364,23 @@
 }
 
 @media (max-width: 480px) {
+  .dashboard-header {
+    padding: 0 8px;
+    height: 50px;
+  }
+
+  .header-left {
+    gap: 8px;
+  }
+
+  .logo-text {
+    font-size: 18px;
+  }
+
+  .header-right {
+    gap: 4px;
+  }
+
   .create-button span,
   .archived-toggle span {
     display: none;
@@ -372,17 +389,57 @@
   .create-button,
   .archived-toggle {
     width: 36px;
+    height: 36px;
     padding: 0;
     display: flex;
     align-items: center;
     justify-content: center;
+    min-width: 36px;
+  }
+
+  .user-avatar .user-name {
+    display: none;
+  }
+
+  .user-avatar {
+    padding: 4px;
+  }
+
+  .dashboard-content {
+    padding: 12px 8px;
+  }
+
+  .section-title {
+    font-size: 16px !important;
+  }
+
+  .section-count {
+    display: none;
   }
 
   .boards-grid {
     grid-template-columns: 1fr;
+    gap: 8px;
   }
 
   .board-card-cover {
-    height: 80px;
+    height: 70px;
+  }
+
+  .board-card-title {
+    font-size: 14px !important;
+  }
+
+  .board-card-footer {
+    padding: 8px;
+  }
+
+  .board-card-tag {
+    font-size: 10px !important;
+    padding: 2px 6px;
+  }
+
+  .boards-section {
+    margin-bottom: 24px;
   }
 }
