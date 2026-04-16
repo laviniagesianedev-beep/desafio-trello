@@ -87,6 +87,7 @@ export function CardModal({ card, boardId, listId, mode, open, onClose, onUpdate
   const [submittingComment, setSubmittingComment] = useState(false);
   const [attachments, setAttachments] = useState<{ id: number; file_name: string; file_size: number; created_at: string }[]>([]);
   const [uploading, setUploading] = useState(false);
+  const [deletingAttachmentId, setDeletingAttachmentId] = useState<number | null>(null);
 
   const isCreate = mode === 'create';
 
@@ -646,12 +647,16 @@ export function CardModal({ card, boardId, listId, mode, open, onClose, onUpdate
                         size="small"
                         danger
                         icon={<DeleteOutlined />}
+                        loading={deletingAttachmentId === att.id}
                         onClick={async () => {
+                          setDeletingAttachmentId(att.id);
                           try {
                             await attachmentApi.delete(att.id);
                             setAttachments(prev => prev.filter(a => a.id !== att.id));
                           } catch {
                             message.error('Erro ao remover anexo');
+                          } finally {
+                            setDeletingAttachmentId(null);
                           }
                         }}
                       />

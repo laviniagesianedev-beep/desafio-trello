@@ -28,6 +28,7 @@ import {
   Form,
   Modal,
   Popconfirm,
+  Skeleton,
 } from 'antd';
 import {
   ArrowLeftOutlined,
@@ -101,6 +102,7 @@ function BoardPage() {
   const [isArchived, setIsArchived] = useState(false);
   const [archiveLoading, setArchiveLoading] = useState(false);
   const [restoreLoading, setRestoreLoading] = useState(false);
+  const [restoringCardId, setRestoringCardId] = useState<number | null>(null);
   const [deleteBoardLoading, setDeleteBoardLoading] = useState(false);
   const [archivedCards, setArchivedCards] = useState<CardData[]>([]);
   const [showArchived, setShowArchived] = useState(false);
@@ -155,6 +157,7 @@ function BoardPage() {
   };
 
   const handleRestoreCard = async (cardId: number) => {
+    setRestoringCardId(cardId);
     try {
       await cardApi.restore(cardId);
       message.success('Card restaurado');
@@ -162,6 +165,8 @@ function BoardPage() {
       loadBoard();
     } catch {
       message.error('Erro ao restaurar card');
+    } finally {
+      setRestoringCardId(null);
     }
   };
 
@@ -531,8 +536,26 @@ function BoardPage() {
 
       <Content className="board-content">
         {loading ? (
-          <div className="board-loading">
-            <Spin size="large" />
+          <div className="board-skeleton">
+            <div className="skeleton-header">
+              <Skeleton.Input active size="small" style={{ width: 200, height: 20 }} />
+              <div style={{ display: 'flex', gap: 8 }}>
+                <Skeleton.Button active size="small" style={{ width: 80 }} />
+                <Skeleton.Button active size="small" style={{ width: 80 }} />
+              </div>
+            </div>
+            <div className="skeleton-lists">
+              {[1, 2, 3].map(i => (
+                <div key={i} className="list-column">
+                  <Skeleton.Input active size="small" style={{ width: 120, marginBottom: 12 }} />
+                  {[1, 2, 3].map(j => (
+                    <div key={j} className="card-item">
+                      <Skeleton active paragraph={{ rows: 1 }} />
+                    </div>
+                  ))}
+                </div>
+              ))}
+            </div>
           </div>
         ) : error ? (
           <div className="board-loading">
@@ -612,6 +635,7 @@ function BoardPage() {
                             type="link"
                             size="small"
                             icon={<FolderOutlined />}
+                            loading={restoringCardId === card.id}
                             onClick={() => handleRestoreCard(card.id)}
                           >
                             Restaurar
