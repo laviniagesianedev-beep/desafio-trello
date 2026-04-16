@@ -75,6 +75,7 @@ function BoardPage() {
   const [lists, setLists] = useState<ListData[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAddingList, setIsAddingList] = useState(false);
+  const [creatingListLoading, setCreatingListLoading] = useState(false);
   const [selectedCard, setSelectedCard] = useState<CardData | null>(null);
   const [cardModalOpen, setCardModalOpen] = useState(false);
   const [cardModalMode, setCardModalMode] = useState<'edit' | 'create'>('edit');
@@ -95,6 +96,9 @@ function BoardPage() {
   const [showFilters, setShowFilters] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isArchived, setIsArchived] = useState(false);
+  const [archiveLoading, setArchiveLoading] = useState(false);
+  const [restoreLoading, setRestoreLoading] = useState(false);
+  const [deleteBoardLoading, setDeleteBoardLoading] = useState(false);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } })
@@ -125,6 +129,7 @@ function BoardPage() {
   }, [loadBoard]);
 
   const handleCreateList = async (values: ListFormValues) => {
+    setCreatingListLoading(true);
     try {
       const { data } = await listApi.create(Number(id), values.title);
       setLists(prev => [...prev, { ...data, cards: [] }]);
@@ -133,6 +138,8 @@ function BoardPage() {
       message.success('Lista criada');
     } catch {
       message.error('Erro ao criar lista');
+    } finally {
+      setCreatingListLoading(false);
     }
   };
 
@@ -311,13 +318,17 @@ function BoardPage() {
       key: 'archive',
       icon: <EditOutlined />,
       label: 'Arquivar',
+      loading: archiveLoading,
       onClick: async () => {
+        setArchiveLoading(true);
         try {
           await boardApi.archive(currentBoard!.id);
           message.success('Quadro arquivado');
           navigate('/dashboard');
         } catch {
           message.error('Erro ao arquivar quadro');
+        } finally {
+          setArchiveLoading(false);
         }
       },
       danger: true,
@@ -326,7 +337,9 @@ function BoardPage() {
       key: 'restore',
       icon: <EditOutlined />,
       label: 'Desarquivar',
+      loading: restoreLoading,
       onClick: async () => {
+        setRestoreLoading(true);
         try {
           await boardApi.restore(currentBoard!.id);
           message.success('Quadro desarquivado');
@@ -334,6 +347,8 @@ function BoardPage() {
           loadBoard();
         } catch {
           message.error('Erro ao desarquivar');
+        } finally {
+          setRestoreLoading(false);
         }
       },
     } : null,
@@ -357,12 +372,15 @@ function BoardPage() {
 
   const handleDeleteBoard = async () => {
     if (!currentBoard) return;
+    setDeleteBoardLoading(true);
     try {
       await boardApi.delete(currentBoard.id);
       message.success('Quadro excluído');
       navigate('/dashboard');
     } catch {
       message.error('Erro ao excluir quadro');
+    } finally {
+      setDeleteBoardLoading(false);
     }
   };
 
@@ -514,7 +532,7 @@ function BoardPage() {
                       <Input placeholder="Título da lista" autoFocus />
                     </Form.Item>
                     <div className="add-list-actions">
-                      <Button type="primary" htmlType="submit" size="small">Adicionar</Button>
+                      <Button type="primary" htmlType="submit" size="small" loading={creatingListLoading}>Adicionar</Button>
                       <Button size="small" onClick={() => { setIsAddingList(false); listForm.resetFields(); }}>Cancelar</Button>
                     </div>
                   </Form>
@@ -594,16 +612,16 @@ function BoardPage() {
               ))}
             </div>
           </div>
-          <Popconfirm
-            title="Excluir este quadro?"
-            description="Todos os dados serão perdidos."
-            onConfirm={handleDeleteBoard}
-            okText="Excluir"
-            cancelText="Cancelar"
-            okButtonProps={{ danger: true }}
-          >
-            <Button danger className="delete-board-button">Excluir Quadro</Button>
-          </Popconfirm>
+            <Popconfirm
+              title="Excluir este quadro?"
+              description="Todos os dados serão perdidos."
+              onConfirm={handleDeleteBoard}
+              okText="Excluir"
+              cancelText="Cancelar"
+              okButtonProps={{ danger: true, loading: deleteBoardLoading }}
+            >
+              <Button danger className="delete-board-button" loading={deleteBoardLoading}>Excluir Quadro</Button>
+            </Popconfirm>
         </div>
       </Modal>
     </Layout>

@@ -31,6 +31,8 @@ export function ListColumn({ list, allLists, onCardClick, onCreateCard, onListUp
   const [editingTitle, setEditingTitle] = useState(list.title);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [moveToListId, setMoveToListId] = useState<number | undefined>(undefined);
+  const [renameLoading, setRenameLoading] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   const { setNodeRef, isOver } = useDroppable({
     id: `list-${list.id}`,
@@ -38,16 +40,20 @@ export function ListColumn({ list, allLists, onCardClick, onCreateCard, onListUp
   });
 
   const handleRename = async () => {
+    setRenameLoading(true);
     try {
       await listApi.update(list.id, editingTitle);
       setIsEditing(false);
       onListUpdated();
     } catch {
       message.error('Erro ao renomear lista');
+    } finally {
+      setRenameLoading(false);
     }
   };
 
   const handleDelete = async () => {
+    setDeleteLoading(true);
     try {
       await listApi.delete(list.id, moveToListId);
       message.success(moveToListId ? 'Lista excluída e cards movidos' : 'Lista excluída');
@@ -56,6 +62,8 @@ export function ListColumn({ list, allLists, onCardClick, onCreateCard, onListUp
       onListDeleted();
     } catch {
       message.error('Erro ao excluir lista');
+    } finally {
+      setDeleteLoading(false);
     }
   };
 
@@ -99,9 +107,12 @@ export function ListColumn({ list, allLists, onCardClick, onCreateCard, onListUp
               value={editingTitle}
               onChange={e => setEditingTitle(e.target.value)}
               onPressEnter={handleRename}
-              onBlur={handleRename}
+              onBlur={() => { if (!renameLoading) handleRename(); }}
+              onFocus={(e) => e.target.select()}
               autoFocus
               size="small"
+              loading={renameLoading}
+              disabled={renameLoading}
             />
           </Form>
         ) : (
@@ -143,7 +154,7 @@ export function ListColumn({ list, allLists, onCardClick, onCreateCard, onListUp
         onCancel={() => { setDeleteModalOpen(false); setMoveToListId(undefined); }}
         okText="Excluir"
         cancelText="Cancelar"
-        okButtonProps={{ danger: true }}
+        okButtonProps={{ danger: true, loading: deleteLoading }}
       />
     </div>
   );

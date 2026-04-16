@@ -38,6 +38,8 @@ export function MembersModal({ open, onClose, boardId, onUpdated }: MembersModal
   const [addingEmail, setAddingEmail] = useState('');
   const [addRole, setAddRole] = useState<'admin' | 'member'>('member');
   const [addLoading, setAddLoading] = useState(false);
+  const [removingIds, setRemovingIds] = useState<Set<number>>(new Set());
+  const [updatingRoleId, setUpdatingRoleId] = useState<number | null>(null);
 
   useEffect(() => {
     if (open) loadMembers();
@@ -75,6 +77,7 @@ export function MembersModal({ open, onClose, boardId, onUpdated }: MembersModal
   };
 
   const handleRemoveMember = async (memberId: number) => {
+    setRemovingIds(prev => new Set(prev).add(memberId));
     try {
       await memberApi.remove(boardId, memberId);
       setMembers(prev => prev.filter(m => m.id !== memberId));
@@ -82,10 +85,17 @@ export function MembersModal({ open, onClose, boardId, onUpdated }: MembersModal
       onUpdated();
     } catch {
       message.error('Erro ao remover membro');
+    } finally {
+      setRemovingIds(prev => {
+        const next = new Set(prev);
+        next.delete(memberId);
+        return next;
+      });
     }
   };
 
   const handleUpdateRole = async (memberId: number, newRole: 'admin' | 'member') => {
+    setUpdatingRoleId(memberId);
     try {
       await memberApi.updateRole(boardId, memberId, newRole);
       setMembers(prev => prev.map(m => m.id === memberId ? { ...m, role: newRole } : m));
@@ -93,6 +103,8 @@ export function MembersModal({ open, onClose, boardId, onUpdated }: MembersModal
       onUpdated();
     } catch {
       message.error('Erro ao atualizar função');
+    } finally {
+      setUpdatingRoleId(null);
     }
   };
 
@@ -150,6 +162,8 @@ export function MembersModal({ open, onClose, boardId, onUpdated }: MembersModal
                 value={member.role}
                 onChange={(val) => handleUpdateRole(member.id, val)}
                 size="small"
+                loading={updatingRoleId === member.id}
+                disabled={updatingRoleId === member.id}
                 options={[
                   { value: 'admin', label: 'Admin' },
                   { value: 'member', label: 'Membro' },
@@ -162,9 +176,16 @@ export function MembersModal({ open, onClose, boardId, onUpdated }: MembersModal
                 onConfirm={() => handleRemoveMember(member.id)}
                 okText="Remover"
                 cancelText="Cancelar"
-                okButtonProps={{ danger: true }}
+                okButtonProps={{ danger: true, loading: removingIds.has(member.id) }}
               >
-                <Button type="text" danger icon={<DeleteOutlined />} size="small" />
+                <Button
+                  type="text"
+                  danger
+                  icon={<DeleteOutlined />}
+                  size="small"
+                  loading={removingIds.has(member.id)}
+                  disabled={removingIds.has(member.id)}
+                />
               </Popconfirm>,
             ]}
           >

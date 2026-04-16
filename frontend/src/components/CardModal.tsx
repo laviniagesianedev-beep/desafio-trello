@@ -66,6 +66,9 @@ export function CardModal({ card, boardId, listId, mode, open, onClose, onUpdate
   const [showLabelForm, setShowLabelForm] = useState(false);
   const [editingDescription, setEditingDescription] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [creatingLabel, setCreatingLabel] = useState(false);
+  const [archiveLoading, setArchiveLoading] = useState(false);
   const [cardId, setCardId] = useState<number | null>(null);
   const [isArchived, setIsArchived] = useState(false);
   const [comments, setComments] = useState<{ id: number; content: string; user: { name: string }; created_at: string }[]>([]);
@@ -162,6 +165,7 @@ export function CardModal({ card, boardId, listId, mode, open, onClose, onUpdate
 
   const handleDelete = async () => {
     if (!cardId) return;
+    setDeleting(true);
     try {
       await cardApi.delete(cardId);
       message.success('Card excluído');
@@ -169,6 +173,8 @@ export function CardModal({ card, boardId, listId, mode, open, onClose, onUpdate
       onClose();
     } catch {
       message.error('Erro ao excluir card');
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -214,6 +220,7 @@ export function CardModal({ card, boardId, listId, mode, open, onClose, onUpdate
 
   const handleCreateLabel = async () => {
     if (!newLabelName.trim()) return;
+    setCreatingLabel(true);
     try {
       const { data } = await labelApi.create(boardId, {
         name: newLabelName.trim(),
@@ -225,6 +232,8 @@ export function CardModal({ card, boardId, listId, mode, open, onClose, onUpdate
       setShowLabelForm(false);
     } catch {
       message.error('Erro ao criar label');
+    } finally {
+      setCreatingLabel(false);
     }
   };
 
@@ -374,7 +383,7 @@ export function CardModal({ card, boardId, listId, mode, open, onClose, onUpdate
                     />
                   ))}
                 </div>
-                <Button size="small" type="primary" onClick={handleCreateLabel} disabled={saving}>Criar</Button>
+                <Button size="small" type="primary" onClick={handleCreateLabel} disabled={saving || creatingLabel} loading={creatingLabel}>Criar</Button>
               </div>
             )}
 
@@ -446,7 +455,10 @@ export function CardModal({ card, boardId, listId, mode, open, onClose, onUpdate
                 {isArchived ? (
                   <Button
                     icon={<FolderOpenOutlined />}
+                    loading={archiveLoading}
+                    disabled={archiveLoading}
                     onClick={async () => {
+                      setArchiveLoading(true);
                       try {
                         await cardApi.restore(cardId!);
                         setIsArchived(false);
@@ -454,6 +466,8 @@ export function CardModal({ card, boardId, listId, mode, open, onClose, onUpdate
                         onUpdated();
                       } catch {
                         message.error('Erro ao desarquivar');
+                      } finally {
+                        setArchiveLoading(false);
                       }
                     }}
                   >
@@ -462,7 +476,10 @@ export function CardModal({ card, boardId, listId, mode, open, onClose, onUpdate
                 ) : (
                   <Button
                     icon={<InboxOutlined />}
+                    loading={archiveLoading}
+                    disabled={archiveLoading}
                     onClick={async () => {
+                      setArchiveLoading(true);
                       try {
                         await cardApi.archive(cardId!);
                         setIsArchived(true);
@@ -471,6 +488,8 @@ export function CardModal({ card, boardId, listId, mode, open, onClose, onUpdate
                         onClose();
                       } catch {
                         message.error('Erro ao arquivar');
+                      } finally {
+                        setArchiveLoading(false);
                       }
                     }}
                   >
@@ -608,9 +627,9 @@ export function CardModal({ card, boardId, listId, mode, open, onClose, onUpdate
                 onConfirm={handleDelete}
                 okText="Excluir"
                 cancelText="Cancelar"
-                okButtonProps={{ danger: true }}
+                okButtonProps={{ danger: true, loading: deleting }}
               >
-                <Button danger icon={<DeleteOutlined />} className="delete-card-button" disabled={saving}>
+                <Button danger icon={<DeleteOutlined />} className="delete-card-button" disabled={saving || deleting} loading={deleting}>
                   Excluir card
                 </Button>
               </Popconfirm>
