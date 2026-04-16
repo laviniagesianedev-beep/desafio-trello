@@ -91,7 +91,6 @@ export function CardModal({ card, boardId, listId, mode, open, onClose, onUpdate
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [previewFileName, setPreviewFileName] = useState('');
   const [previewLoading, setPreviewLoading] = useState(false);
-  const [loadingComments, setLoadingComments] = useState(false);
   const [isDataLoaded, setIsDataLoaded] = useState(false);
 
   const isCreate = mode === 'create';
@@ -112,11 +111,12 @@ export function CardModal({ card, boardId, listId, mode, open, onClose, onUpdate
       setChecklistItems([]);
       setComments([]);
       setAttachments([]);
+      setBoardLabels([]);
       setEditingDescription(false);
       setCardId(null);
       setIsArchived(false);
-      loadBoardLabels(true);
       setIsDataLoaded(true);
+      loadBoardLabels();
     } else if (card) {
       setTitle(card.title);
       setDescription(card.description || '');
@@ -125,44 +125,40 @@ export function CardModal({ card, boardId, listId, mode, open, onClose, onUpdate
       setChecklistItems(card.checklist_items || []);
       setComments([]);
       setAttachments([]);
+      setBoardLabels([]);
       setEditingDescription(false);
       setCardId(card.id);
       setIsArchived((card as any).is_archived ?? false);
+      setIsDataLoaded(true);
       loadAllCardData();
     }
-  }, [card, open, isCreate]);
+  }, [open, isCreate]);
 
-  const loadBoardLabels = async (setLoaded = false) => {
+  const loadBoardLabels = async () => {
     try {
       const { data } = await labelApi.getByBoard(boardId);
       setBoardLabels(data);
-      if (setLoaded) {
-        setIsDataLoaded(true);
-      }
     } catch {
-      if (setLoaded) setIsDataLoaded(true);
+      // ignore
     }
   };
 
   const loadAllCardData = async () => {
     if (!cardId) return;
     
-    setLoadingComments(true);
+    const targetId = cardId;
     
     try {
-      const [commentsRes, attachmentsRes] = await Promise.all([
-        commentApi.getByCard(cardId).catch(() => ({ data: [] })),
-        attachmentApi.getByCard(cardId).catch(() => ({ data: [] })),
+      const [labelsRes, commentsRes, attachmentsRes] = await Promise.all([
+        labelApi.getByBoard(boardId).catch(() => ({ data: [] })),
+        commentApi.getByCard(targetId).catch(() => ({ data: [] })),
+        attachmentApi.getByCard(targetId).catch(() => ({ data: [] })),
       ]);
+      setBoardLabels(labelsRes.data);
       setComments(commentsRes.data);
       setAttachments(attachmentsRes.data);
-      setBoardLabels([]);
-      loadBoardLabels();
     } catch {
       // ignore
-    } finally {
-      setLoadingComments(false);
-      setIsDataLoaded(true);
     }
   };
 
@@ -638,7 +634,7 @@ export function CardModal({ card, boardId, listId, mode, open, onClose, onUpdate
                       )}
                     </div>
                   ))}
-                  {comments.length === 0 && !loadingComments && (
+                  {comments.length === 0 && isDataLoaded && (
                     <Text type="secondary" className="no-comments">Nenhum comentário ainda.</Text>
                   )}
                 </div>

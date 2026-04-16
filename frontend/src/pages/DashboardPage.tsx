@@ -23,6 +23,7 @@ import {
   ClockCircleOutlined,
   LogoutOutlined,
   InboxOutlined,
+  UserOutlined,
 } from '@ant-design/icons';
 import { useAuthStore } from '../store/authStore';
 import { useBoardStore } from '../store/boardStore';
@@ -68,6 +69,9 @@ function DashboardPage() {
   const [showArchived, setShowArchived] = useState(false);
   const [loadingArchived, setLoadingArchived] = useState(false);
   const [restoringBoardId, setRestoringBoardId] = useState<number | null>(null);
+  const [profileModalOpen, setProfileModalOpen] = useState(false);
+  const [editName, setEditName] = useState(user?.name || '');
+  const [updatingProfile, setUpdatingProfile] = useState(false);
 
   useEffect(() => {
     loadBoards();
@@ -151,6 +155,29 @@ function DashboardPage() {
     }
   };
 
+  const handleOpenProfile = () => {
+    setEditName(user?.name || '');
+    setProfileModalOpen(true);
+  };
+
+  const handleUpdateProfile = async () => {
+    if (!editName.trim()) {
+      message.warning('Nome é obrigatório');
+      return;
+    }
+    setUpdatingProfile(true);
+    try {
+      const { data } = await authApi.updateProfile(editName.trim());
+      useAuthStore.getState().setUser(data.user);
+      message.success('Nome atualizado com sucesso!');
+      setProfileModalOpen(false);
+    } catch {
+      message.error('Erro ao atualizar nome');
+    } finally {
+      setUpdatingProfile(false);
+    }
+  };
+
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     const now = new Date();
@@ -163,6 +190,7 @@ function DashboardPage() {
   };
 
   const userMenuItems = [
+    { key: 'profile', icon: <UserOutlined />, label: 'Editar Perfil', onClick: handleOpenProfile },
     { key: 'logout', icon: <LogoutOutlined />, label: 'Sair', onClick: handleLogout },
   ];
 
@@ -234,6 +262,34 @@ function DashboardPage() {
           </Dropdown>
         </div>
       </Header>
+
+      <Modal
+        title="Editar Perfil"
+        open={profileModalOpen}
+        onCancel={() => setProfileModalOpen(false)}
+        footer={[
+          <Button key="cancel" onClick={() => setProfileModalOpen(false)}>
+            Cancelar
+          </Button>,
+          <Button key="save" type="primary" loading={updatingProfile} onClick={handleUpdateProfile}>
+            Salvar
+          </Button>,
+        ]}
+      >
+        <Form layout="vertical">
+          <Form.Item label="Nome">
+            <Input
+              value={editName}
+              onChange={e => setEditName(e.target.value)}
+              placeholder="Seu nome"
+              maxLength={255}
+            />
+          </Form.Item>
+          <Form.Item label="Email">
+            <Input value={user?.email} disabled />
+          </Form.Item>
+        </Form>
+      </Modal>
 
       <Content className="dashboard-content">
         <div className="dashboard-container">

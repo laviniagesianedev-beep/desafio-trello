@@ -82,6 +82,9 @@ export const authApi = {
     }),
   
   getUser: () => api.get('/user'),
+  
+  updateProfile: (name: string) =>
+    api.put('/user/profile', { name }),
 };
 
 // Serviços de Quadros

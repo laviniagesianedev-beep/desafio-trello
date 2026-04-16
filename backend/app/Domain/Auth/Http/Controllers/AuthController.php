@@ -194,4 +194,37 @@ class AuthController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * Atualizar perfil do usuário
+     */
+    public function updateProfile(Request $request)
+    {
+        try {
+            $validated = $request->validate([
+                'name' => 'required|string|max:255',
+            ]);
+
+            $user = $request->user();
+            $user->update([
+                'name' => $validated['name'],
+            ]);
+
+            return response()->json([
+                'message' => 'Perfil atualizado com sucesso',
+                'user' => $user,
+            ]);
+
+        } catch (ValidationException $e) {
+            return response()->json([
+                'message' => 'Dados inválidos',
+                'errors' => $e->errors(),
+            ], 422);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Erro ao atualizar perfil',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
 }
