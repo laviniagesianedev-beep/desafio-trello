@@ -222,6 +222,20 @@
   line-height: 1.4;
 }
 
+.comment-content .editor-viewer {
+  font-size: 13px;
+}
+
+.comment-content .editor-viewer p {
+  margin: 0;
+}
+
+.comment-content .editor-viewer ul,
+.comment-content .editor-viewer ol {
+  margin: 4px 0;
+  padding-left: 16px;
+}
+
 .no-comments {
   font-size: 13px;
   font-style: italic;
@@ -230,11 +244,26 @@
 .comment-input-row {
   display: flex;
   gap: 8px;
-  align-items: center;
+  align-items: flex-start;
+  flex-wrap: wrap;
 }
 
-.comment-input-row .ant-input {
+.comment-input-row .rich-text-editor {
   flex: 1;
+  min-width: 200px;
+}
+
+.comment-edit-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.comment-edit-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
 }
 
 /* Attachments */

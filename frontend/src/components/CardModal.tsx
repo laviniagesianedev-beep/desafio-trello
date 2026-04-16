@@ -12,16 +12,15 @@ import {
   message,
   Divider,
 } from 'antd';
-import { DeleteOutlined, PlusOutlined, EditOutlined, CheckOutlined, MessageOutlined, PaperClipOutlined, InboxOutlined, FolderOutlined } from '@ant-design/icons';
+import { DeleteOutlined, PlusOutlined, EditOutlined, MessageOutlined, PaperClipOutlined, InboxOutlined, FolderOutlined, SaveOutlined } from '@ant-design/icons';
 import dayjs, { Dayjs } from 'dayjs';
-import ReactMarkdown from 'react-markdown';
 import { LabelBadge } from './LabelBadge';
+import { RichTextEditor, RichTextViewer } from './RichTextEditor';
 import { cardApi, labelApi, checklistApi, commentApi, attachmentApi } from '../services/api';
 import type { CardData } from './CardItem';
 import './CardModal.css';
 
 const { Text } = Typography;
-const { TextArea } = Input;
 
 interface Label {
   id: number;
@@ -71,9 +70,20 @@ export function CardModal({ card, boardId, listId, mode, open, onClose, onUpdate
   const [archiveLoading, setArchiveLoading] = useState(false);
   const [cardId, setCardId] = useState<number | null>(null);
   const [isArchived, setIsArchived] = useState(false);
-  const [comments, setComments] = useState<{ id: number; content: string; user: { name: string }; created_at: string }[]>([]);
+  const [comments, setComments] = useState<{
+    id: number;
+    content: string;
+    author_id: number;
+    author_name: string;
+    created_at: string;
+    updated_at: string;
+    can_edit: boolean;
+  }[]>([]);
   const [newComment, setNewComment] = useState('');
   const [loadingComments, setLoadingComments] = useState(false);
+  const [editingCommentId, setEditingCommentId] = useState<number | null>(null);
+  const [editingCommentContent, setEditingCommentContent] = useState('');
+  const [updatingComment, setUpdatingComment] = useState(false);
   const [attachments, setAttachments] = useState<{ id: number; file_name: string; file_size: number; created_at: string }[]>([]);
   const [uploading, setUploading] = useState(false);
 
@@ -370,29 +380,15 @@ export function CardModal({ card, boardId, listId, mode, open, onClose, onUpdate
               )}
             </div>
             {editingDescription || !description ? (
-              <>
-                <TextArea
-                  value={description}
-                  onChange={e => setDescription(e.target.value)}
-                  placeholder="Adicione uma descrição... (suporta Markdown)"
-                  rows={4}
-                  disabled={saving}
-                />
-                {description && (
-                  <Button
-                    size="small"
-                    type="link"
-                    icon={<CheckOutlined />}
-                    onClick={() => setEditingDescription(false)}
-                    className="checklist-input-row"
-                  >
-                    Concluir edição
-                  </Button>
-                )}
-              </>
+              <RichTextEditor
+                content={description}
+                onChange={setDescription}
+                placeholder="Adicione uma descrição com formatação..."
+                minHeight={120}
+              />
             ) : (
               <div className="description-preview" onClick={() => setEditingDescription(true)}>
-                <ReactMarkdown>{description}</ReactMarkdown>
+                <RichTextViewer content={description} />
               </div>
             )}
           </div>
@@ -523,12 +519,74 @@ export function CardModal({ card, boardId, listId, mode, open, onClose, onUpdate
                   {comments.map(comment => (
                     <div key={comment.id} className="comment-item">
                       <div className="comment-header">
-                        <Text strong>{comment.user?.name || 'Usuário'}</Text>
+                        <Text strong>{comment.author_name}</Text>
                         <Text type="secondary" className="comment-date">
-                          {new Date(comment.created_at).toLocaleDateString('pt-BR')}
+                          {new Date(comment.created_at).toLocaleDateString('pt-BR', { 
+                            day: '2-digit', 
+                            month: '2-digit', 
+                            year: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })}
+                          {comment.updated_at !== comment.created_at && ' (editado)'}
                         </Text>
                       </div>
-                      <Text className="comment-content">{comment.content}</Text>
+                      {editingCommentId === comment.id ? (
+                        <div className="comment-edit-form">
+                          <RichTextEditor
+                            content={editingCommentContent}
+                            onChange={setEditingCommentContent}
+                            placeholder="Edite seu comentário..."
+                            minHeight={80}
+                          />
+                          <div className="comment-edit-actions">
+                            <Button size="small" onClick={() => setEditingCommentId(null)}>
+                              Cancelar
+                            </Button>
+                            <Button 
+                              size="small" 
+                              type="primary" 
+                              icon={<SaveOutlined />}
+                              loading={updatingComment}
+                              onClick={async () => {
+                                if (!editingCommentContent.trim()) return;
+                                setUpdatingComment(true);
+                                try {
+                                  const { data } = await commentApi.update(comment.id, editingCommentContent);
+                                  setComments(prev => prev.map(c => c.id === comment.id ? data : c));
+                                  setEditingCommentId(null);
+                                  message.success('Comentário atualizado');
+                                } catch {
+                                  message.error('Erro ao atualizar comentário');
+                                } finally {
+                                  setUpdatingComment(false);
+                                }
+                              }}
+                            >
+                              Salvar
+                            </Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <>
+                          <div className="comment-content">
+                            <RichTextViewer content={comment.content} />
+                          </div>
+                          {comment.can_edit && (
+                            <Button 
+                              type="link" 
+                              size="small" 
+                              icon={<EditOutlined />}
+                              onClick={() => {
+                                setEditingCommentId(comment.id);
+                                setEditingCommentContent(comment.content);
+                              }}
+                            >
+                              Editar
+                            </Button>
+                          )}
+                        </>
+                      )}
                     </div>
                   ))}
                   {comments.length === 0 && !loadingComments && (
@@ -536,39 +594,30 @@ export function CardModal({ card, boardId, listId, mode, open, onClose, onUpdate
                   )}
                 </div>
                 <div className="comment-input-row">
-                  <Input
+                  <RichTextEditor
+                    content={newComment}
+                    onChange={setNewComment}
                     placeholder="Adicione um comentário..."
-                    value={newComment}
-                    onChange={e => setNewComment(e.target.value)}
-                    onPressEnter={async () => {
-                      if (!newComment.trim()) return;
-                      await ensureCardAndThen(async (cid) => {
-                        try {
-                          const { data } = await commentApi.create(cid, newComment.trim());
-                          setComments(prev => [...prev, data]);
-                          setNewComment('');
-                        } catch {
-                          message.error('Erro ao adicionar comentário');
-                        }
-                      });
-                    }}
+                    minHeight={80}
                   />
                   <Button
                     type="primary"
                     icon={<PlusOutlined />}
                     onClick={async () => {
-                      if (!newComment.trim()) return;
+                      if (!newComment.trim() || newComment === '<p></p>') return;
                       await ensureCardAndThen(async (cid) => {
                         try {
-                          const { data } = await commentApi.create(cid, newComment.trim());
-                          setComments(prev => [...prev, data]);
+                          const { data } = await commentApi.create(cid, newComment);
+                          setComments(prev => [data, ...prev]);
                           setNewComment('');
                         } catch {
                           message.error('Erro ao adicionar comentário');
                         }
                       });
                     }}
-                  />
+                  >
+                    Comentar
+                  </Button>
                 </div>
               </div>
 

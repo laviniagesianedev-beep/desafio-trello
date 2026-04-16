@@ -32,7 +32,22 @@ class CommentController extends Controller
                 ->orderBy('created_at', 'desc')
                 ->get();
 
-            return response()->json($comments);
+            $result = $comments->map(function ($comment) use ($user, $board) {
+                $canEdit = $comment->user_id === $user->id;
+                
+                return [
+                    'id' => $comment->id,
+                    'content' => $comment->content,
+                    'card_id' => $comment->card_id,
+                    'author_id' => $comment->user_id,
+                    'author_name' => $comment->author->name ?? 'Usuário',
+                    'created_at' => $comment->created_at,
+                    'updated_at' => $comment->updated_at,
+                    'can_edit' => $canEdit,
+                ];
+            });
+
+            return response()->json($result);
 
         } catch (\Exception $e) {
             return response()->json([
@@ -72,7 +87,16 @@ class CommentController extends Controller
             $comment->content = $validated['content'];
             $comment->save();
 
-            return response()->json($comment->load('author'), 201);
+            return response()->json([
+                'id' => $comment->id,
+                'content' => $comment->content,
+                'card_id' => $comment->card_id,
+                'author_id' => $comment->user_id,
+                'author_name' => $user->name,
+                'created_at' => $comment->created_at,
+                'updated_at' => $comment->updated_at,
+                'can_edit' => true,
+            ], 201);
 
         } catch (ValidationException $e) {
             return response()->json([
@@ -109,7 +133,16 @@ class CommentController extends Controller
 
             $comment->update($validated);
 
-            return response()->json($comment);
+            return response()->json([
+                'id' => $comment->id,
+                'content' => $comment->content,
+                'card_id' => $comment->card_id,
+                'author_id' => $comment->user_id,
+                'author_name' => $comment->author->name ?? 'Usuário',
+                'created_at' => $comment->created_at,
+                'updated_at' => $comment->updated_at,
+                'can_edit' => true,
+            ]);
 
         } catch (ValidationException $e) {
             return response()->json([
