@@ -116,7 +116,6 @@ export function CardModal({ card, boardId, listId, mode, open, onClose, onUpdate
       setCardId(null);
       setIsArchived(false);
       setIsDataLoaded(true);
-      loadBoardLabels();
     } else if (card) {
       setTitle(card.title);
       setDescription(card.description || '');
@@ -129,19 +128,10 @@ export function CardModal({ card, boardId, listId, mode, open, onClose, onUpdate
       setEditingDescription(false);
       setCardId(card.id);
       setIsArchived((card as any).is_archived ?? false);
-      setIsDataLoaded(true);
+      setIsDataLoaded(false);
       loadAllCardData();
     }
   }, [open, isCreate]);
-
-  const loadBoardLabels = async () => {
-    try {
-      const { data } = await labelApi.getByBoard(boardId);
-      setBoardLabels(data);
-    } catch {
-      // ignore
-    }
-  };
 
   const loadAllCardData = async () => {
     if (!cardId) return;
@@ -157,8 +147,9 @@ export function CardModal({ card, boardId, listId, mode, open, onClose, onUpdate
       setBoardLabels(labelsRes.data);
       setComments(commentsRes.data);
       setAttachments(attachmentsRes.data);
+      setIsDataLoaded(true);
     } catch {
-      // ignore
+      setIsDataLoaded(true);
     }
   };
 
