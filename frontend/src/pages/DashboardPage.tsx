@@ -14,7 +14,6 @@ import {
   Spin,
   Empty,
   Tag,
-  Skeleton,
 } from 'antd';
 import {
   PlusOutlined,
@@ -239,21 +238,8 @@ function DashboardPage() {
       <Content className="dashboard-content">
         <div className="dashboard-container">
           {isLoading ? (
-            <div className="skeleton-container">
-              <section className="boards-section">
-                <Skeleton.Input active size="small" style={{ width: 150, marginBottom: 20 }} />
-                <div className="boards-grid">
-                  {[1, 2, 3, 4, 5, 6].map(i => (
-                    <div key={i} className="board-card skeleton-card">
-                      <Skeleton.Input active style={{ width: '100%', height: 100 }} />
-                      <div style={{ padding: '10px 12px' }}>
-                        <Skeleton.Input active size="small" style={{ width: '70%', marginBottom: 8 }} />
-                        <Skeleton.Input active size="small" style={{ width: '40%' }} />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </section>
+            <div className="loading-container">
+              <Spin size="large" />
             </div>
           ) : error ? (
             <div className="loading-container">

@@ -28,7 +28,6 @@ import {
   Form,
   Modal,
   Popconfirm,
-  Skeleton,
 } from 'antd';
 import {
   ArrowLeftOutlined,
@@ -536,26 +535,8 @@ function BoardPage() {
 
       <Content className="board-content">
         {loading ? (
-          <div className="board-skeleton">
-            <div className="skeleton-header">
-              <Skeleton.Input active size="small" style={{ width: 200, height: 20 }} />
-              <div style={{ display: 'flex', gap: 8 }}>
-                <Skeleton.Button active size="small" style={{ width: 80 }} />
-                <Skeleton.Button active size="small" style={{ width: 80 }} />
-              </div>
-            </div>
-            <div className="skeleton-lists">
-              {[1, 2, 3].map(i => (
-                <div key={i} className="list-column">
-                  <Skeleton.Input active size="small" style={{ width: 120, marginBottom: 12 }} />
-                  {[1, 2, 3].map(j => (
-                    <div key={j} className="card-item">
-                      <Skeleton active paragraph={{ rows: 1 }} />
-                    </div>
-                  ))}
-                </div>
-              ))}
-            </div>
+          <div className="board-loading">
+            <Spin size="large" />
           </div>
         ) : error ? (
           <div className="board-loading">
