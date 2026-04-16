@@ -51,6 +51,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/cards/{card}/move', [CardController::class, 'move']);
     Route::put('/cards/{card}/archive', [CardController::class, 'archive']);
     Route::put('/cards/{card}/restore', [CardController::class, 'restore']);
+    Route::get('/boards/{board}/cards/archived', [CardController::class, 'archivedByBoard']);
     
     // Comentários
     Route::apiResource('cards.comments', CommentController::class)->shallow();

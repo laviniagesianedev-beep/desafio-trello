@@ -68,7 +68,7 @@ export const authApi = {
       password_confirmation: passwordConfirmation,
     }),
   
-  logout: () => api.post('/auth/logout'),
+  logout: () => api.post('/logout'),
   
   forgotPassword: (email: string) =>
     api.post('/auth/forgot-password', { email }),
@@ -127,6 +127,8 @@ export const listApi = {
 // Serviços de Cards
 export const cardApi = {
   getByList: (listId: number) => api.get(`/lists/${listId}/cards`),
+
+  getArchived: (boardId: number) => api.get(`/boards/${boardId}/cards/archived`),
 
   getById: (id: number) => api.get(`/cards/${id}`),
 

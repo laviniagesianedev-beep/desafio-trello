@@ -5,6 +5,7 @@ namespace App\Domain\Members\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Domain\Boards\Models\Board;
 use App\Models\User;
+use App\Notifications\BoardMemberInvitationNotification;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 
@@ -78,12 +79,21 @@ class MemberController extends Controller
             }
 
             // Adicionar membro
-            $board->addMember($memberUser->id, $validated['role'] ?? 'normal');
+            $role = $validated['role'] ?? 'normal';
+            $board->addMember($memberUser->id, $role);
 
-            return response()->json([
-                'message' => 'Membro adicionado com sucesso',
-                'member' => $memberUser,
-            ], 201);
+            // Enviar email de convite
+            $memberUser->notify(new BoardMemberInvitationNotification(
+                $board->title,
+                $user->name,
+                $board->id
+            ));
+
+            // Retornar usuário com role
+            $memberUser->role = $role;
+            $memberUser->user_id = $memberUser->id;
+
+            return response()->json($memberUser, 201);
 
         } catch (ValidationException $e) {
             return response()->json([

@@ -379,4 +379,41 @@ class CardController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * Listar cards arquivados de um board
+     */
+    public function archivedByBoard(Request $request, $boardId)
+    {
+        try {
+            $user = $request->user();
+
+            // Buscar o board
+            $board = \App\Domain\Boards\Models\Board::findOrFail($boardId);
+
+            // Verificar permissão
+            if (!$board->hasMember($user->id) && $board->user_id !== $user->id) {
+                return response()->json([
+                    'message' => 'Você não tem permissão para acessar este quadro',
+                ], 403);
+            }
+
+            // Buscar cards arquivados de todas as listas do board
+            $archivedCards = Card::whereHas('list', function ($query) use ($boardId) {
+                    $query->where('board_id', $boardId);
+                })
+                ->archived()
+                ->with(['list', 'labels', 'creator'])
+                ->orderBy('archived_at', 'desc')
+                ->get();
+
+            return response()->json($archivedCards);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Erro ao buscar cards arquivados',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
 }

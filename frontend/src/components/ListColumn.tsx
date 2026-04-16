@@ -111,7 +111,6 @@ export function ListColumn({ list, allLists, onCardClick, onCreateCard, onListUp
               onFocus={(e) => e.target.select()}
               autoFocus
               size="small"
-              loading={renameLoading}
               disabled={renameLoading}
             />
           </Form>

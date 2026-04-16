@@ -1,74 +1,65 @@
 # Boardy - Trello Clone
 
-Uma aplicação completa de gerenciamento de quadros Kanban, inspirada no Trello, com design elegante e cores pastéis.
+Clone funcional do Trello. Boards, listas e cards com drag-and-drop, labels, checklist, ordenação persistente, múltiplos boards por usuário e sistema de membros com permissões.
 
-## Tecnologias
+## Stack
 
-### Backend
-- **Laravel 10** - Framework PHP
-- **SQLite** - Banco de dados
-- **Laravel Sanctum** - Autenticação via API tokens
-- **Redis** - Cache e fila
-
-### Frontend
-- **React 18** - Biblioteca de interface
-- **TypeScript** - Tipagem estática
-- **Ant Design** - Biblioteca de componentes
-- **Zustand** - Gerenciamento de estado
-- **React Router** - Roteamento
-- **Axios** - Cliente HTTP
-
-### DevOps
-- **Docker** - Containerização
-- **Docker Compose** - Orquestração de containers
-- **Nginx** - Servidor web
+| Camada | Tecnologia |
+|--------|------------|
+| Frontend | React 18 + TypeScript, Ant Design 5, dnd-kit, Zustand, Vite |
+| Backend | Laravel 10, PHP 8.2, PostgreSQL, Sanctum |
+| Dev | Docker Compose |
 
 ## Funcionalidades
 
-### Autenticação
-- Registro com validação de senha forte
-- Login com email/senha
-- Recuperação de senha via email
-- Tokens de API com Sanctum
-
 ### Quadros
-- Criar, editar, excluir quadros
+- Criar, editar e excluir quadros
 - Cores pastéis personalizáveis
 - Arquivar e restaurar quadros
-- Compartilhamento com membros
+- Sistema de membros com permissões (Admin, Moderador, Normal, Observador)
+- Convites por email
 
 ### Listas
-- Criar, editar, excluir listas
-- Reordenar listas via drag & drop
-- Posicionamento automático
+- Criar, renomear e excluir listas
+- Reordenar via drag-and-drop
+- Posicionamento persistente
 
 ### Cards
-- Criar, editar, excluir cards
-- Mover cards entre listas
-- Descrição e data de entrega
+- Criar cards com título, descrição (Markdown), labels e data de entrega
+- Editar todos os campos
+- Mover cards entre listas via drag-and-drop
+- Reordenar cards dentro da lista
+- Checklist com itens checkáveis
 - Arquivar e restaurar cards
-
-### Colaboração
-- Sistema de permissões (Admin, Moderador, Normal, Observador)
-- Convites por email
-- Comentários em cards
+- Comentários
 - Anexos de arquivos
 
-### Interface
-- Design elegante com cores pastéis
-- Tema personalizado no Ant Design
-- Layout responsivo
-- Animações suaves
+### Filtros
+- Filtrar por label
+- Filtrar por data de entrega (atrasados, hoje, esta semana)
+- Buscar por texto (título ou descrição)
 
-## Configuração
+### Autenticação
+- Registro com validação de senha forte
+- Login/logout
+- Recuperação de senha via email
+- Cada usuário vê apenas seus boards
+
+## Portas
+
+| Serviço | Porta |
+|---------|-------|
+| Frontend | 3000 |
+| Backend | 8000 |
+| PostgreSQL | 5432 |
+
+## Instalação
 
 ### Pré-requisitos
-- Docker e Docker Compose (recomendado)
-- Node.js 20+
-- PHP 8.2+
-- Composer
+- Docker e Docker Compose
+- Node.js 20+ (para desenvolvimento local do frontend)
 
-### Instalação com Docker (Recomendado)
+### Docker (Recomendado)
 
 1. Clone o repositório:
 ```bash
@@ -78,34 +69,14 @@ cd projeto-trello
 
 2. Inicie os containers:
 ```bash
-docker-compose up -d
+docker compose -f docker-compose.simple.yml up -d
 ```
 
-3. Instale as dependências do backend:
-```bash
-docker-compose exec backend composer install
-```
-
-4. Execute as migrations:
-```bash
-docker-compose exec backend php artisan migrate
-```
-
-5. Crie o link de storage:
-```bash
-docker-compose exec backend php artisan storage:link
-```
-
-6. Instale as dependências do frontend:
-```bash
-docker-compose exec frontend npm install
-```
-
-7. Acesse a aplicação:
+3. Acesse a aplicação:
 - Frontend: http://localhost:3000
 - Backend API: http://localhost:8000/api
 
-### Instalação Local (Sem Docker)
+### Desenvolvimento Local
 
 #### Backend
 ```bash
@@ -114,20 +85,14 @@ cd backend
 # Instalar dependências
 composer install
 
-# Copiar arquivo de ambiente
+# Copiar e configurar ambiente
 cp .env.example .env
 
-# Gerar chave da aplicação
+# Gerar chave
 php artisan key:generate
-
-# Criar banco de dados SQLite
-touch database/database.sqlite
 
 # Executar migrations
 php artisan migrate
-
-# Criar link de storage
-php artisan storage:link
 
 # Iniciar servidor
 php artisan serve
@@ -140,128 +105,187 @@ cd frontend
 # Instalar dependências
 npm install
 
-# Copiar arquivo de ambiente
-cp .env.example .env
-
-# Iniciar servidor de desenvolvimento
+# Iniciar servidor
 npm run dev
 ```
 
-### Usuário de Teste
-- Email: `lavinia.gesiane.dev@b2pro.com.br`
+## Usuário de Teste
+
+- Email: `laligesiane@gmail.com`
 - Senha: `Password123!`
+
+## Comandos Úteis
+
+```bash
+# Backend
+docker compose -f docker-compose.simple.yml exec backend php artisan test
+docker compose -f docker-compose.simple.yml exec backend php artisan migrate
+docker compose -f docker-compose.simple.yml exec backend php artisan migrate:fresh --seed
+
+# Frontend
+cd frontend && npm run dev
+cd frontend && npm run build
+cd frontend && npm test
+```
 
 ## Estrutura do Projeto
 
 ```
 projeto-trello/
-├── backend/           # API Laravel
+├── backend/                 # API Laravel
 │   ├── app/
+│   │   ├── Domain/        # Domínios (Boards, Cards, Lists, etc.)
+│   │   │   └── {domain}/
+│   │   │       ├── Http/Controllers/
+│   │   │       └── Models/
 │   │   ├── Http/Controllers/API/
 │   │   ├── Models/
-│   │   └── Providers/
-│   ├── database/
-│   │   ├── migrations/
-│   │   └── seeders/
-│   ├── routes/
-│   └── storage/
-├── frontend/          # Aplicação React
+│   │   ├── Services/      # Lógica de negócio isolada
+│   │   └── Notifications/
+│   ├── database/migrations/
+│   └── routes/api.php
+├── frontend/               # Aplicação React
 │   ├── src/
-│   │   ├── components/
-│   │   ├── pages/
-│   │   ├── store/
-│   │   ├── services/
-│   │   └── theme/
+│   │   ├── components/    # Componentes reutilizáveis
+│   │   ├── pages/        # Páginas (Login, Dashboard, Board)
+│   │   ├── services/     # API calls
+│   │   ├── store/        # Zustand stores
+│   │   └── theme/        # Tema Ant Design
 │   └── public/
-├── docker/            # Configurações Docker
-└── docker-compose.yml
+└── docker-compose.simple.yml
 ```
 
 ## API Endpoints
 
 ### Autenticação
-- `POST /api/auth/register` - Registrar usuário
-- `POST /api/auth/login` - Login
-- `POST /api/auth/logout` - Logout
-- `POST /api/auth/forgot-password` - Esqueci minha senha
-- `POST /api/auth/reset-password` - Redefinir senha
+| Método | Endpoint | Descrição |
+|--------|----------|-----------|
+| POST | /api/auth/register | Registrar usuário |
+| POST | /api/auth/login | Login |
+| POST | /api/logout | Logout |
+| POST | /api/auth/forgot-password | Solicitar recuperação de senha |
+| POST | /api/auth/reset-password | Redefinir senha |
 
 ### Quadros
-- `GET /api/boards` - Listar quadros
-- `POST /api/boards` - Criar quadro
-- `GET /api/boards/{id}` - Obter quadro
-- `PUT /api/boards/{id}` - Atualizar quadro
-- `DELETE /api/boards/{id}` - Excluir quadro
+| Método | Endpoint | Descrição |
+|--------|----------|-----------|
+| GET | /api/boards | Listar quadros |
+| POST | /api/boards | Criar quadro |
+| GET | /api/boards/{id} | Obter quadro |
+| PUT | /api/boards/{id} | Atualizar quadro |
+| DELETE | /api/boards/{id} | Excluir quadro |
+| GET | /api/boards/archived | Listar arquivados |
+| PUT | /api/boards/{id}/archive | Arquivar |
+| PUT | /api/boards/{id}/restore | Restaurar |
 
 ### Listas
-- `GET /api/boards/{boardId}/lists` - Listar listas
-- `POST /api/boards/{boardId}/lists` - Criar lista
-- `PUT /api/lists/{id}` - Atualizar lista
-- `DELETE /api/lists/{id}` - Excluir lista
+| Método | Endpoint | Descrição |
+|--------|----------|-----------|
+| GET | /api/boards/{id}/lists | Listar listas |
+| POST | /api/boards/{id}/lists | Criar lista |
+| PUT | /api/lists/{id} | Atualizar lista |
+| DELETE | /api/lists/{id} | Excluir lista |
+| PUT | /api/lists/{id}/reorder | Reordenar |
 
 ### Cards
-- `GET /api/lists/{listId}/cards` - Listar cards
-- `POST /api/lists/{listId}/cards` - Criar card
-- `PUT /api/cards/{id}` - Atualizar card
-- `PUT /api/cards/{id}/move` - Mover card
-- `DELETE /api/cards/{id}` - Excluir card
+| Método | Endpoint | Descrição |
+|--------|----------|-----------|
+| GET | /api/lists/{id}/cards | Listar cards |
+| POST | /api/lists/{id}/cards | Criar card |
+| PUT | /api/cards/{id} | Atualizar card |
+| DELETE | /api/cards/{id} | Excluir card |
+| PUT | /api/cards/{id}/reorder | Reordenar |
+| PUT | /api/cards/{id}/move | Mover para outra lista |
+| PUT | /api/cards/{id}/archive | Arquivar |
+| PUT | /api/cards/{id}/restore | Restaurar |
 
 ### Membros
-- `GET /api/boards/{boardId}/members` - Listar membros
-- `POST /api/boards/{boardId}/members` - Adicionar membro
-- `PUT /api/boards/{boardId}/members/{memberId}/role` - Atualizar papel
-- `DELETE /api/boards/{boardId}/members/{memberId}` - Remover membro
+| Método | Endpoint | Descrição |
+|--------|----------|-----------|
+| GET | /api/boards/{id}/members | Listar membros |
+| POST | /api/boards/{id}/members | Adicionar membro |
+| PUT | /api/boards/{id}/members/{mid}/role | Atualizar papel |
+| DELETE | /api/boards/{id}/members/{mid} | Remover membro |
 
-## Desenvolvimento
+### Labels
+| Método | Endpoint | Descrição |
+|--------|----------|-----------|
+| GET | /api/boards/{id}/labels | Listar labels |
+| POST | /api/boards/{id}/labels | Criar label |
+| PUT | /api/labels/{id} | Atualizar label |
+| DELETE | /api/labels/{id} | Excluir label |
 
-### Backend
-```bash
-# Entrar no container
-docker-compose exec backend bash
+### Checklist
+| Método | Endpoint | Descrição |
+|--------|----------|-----------|
+| GET | /api/cards/{id}/checklist | Listar itens |
+| POST | /api/cards/{id}/checklist | Criar item |
+| PUT | /api/checklist-items/{id} | Atualizar item |
+| DELETE | /api/checklist-items/{id} | Excluir item |
 
-# Executar testes
-php artisan test
+### Comentários
+| Método | Endpoint | Descrição |
+|--------|----------|-----------|
+| GET | /api/cards/{id}/comments | Listar comentários |
+| POST | /api/cards/{id}/comments | Criar comentário |
+| PUT | /api/comments/{id} | Atualizar comentário |
+| DELETE | /api/comments/{id} | Excluir comentário |
 
-# Gerar chave API
-php artisan key:generate
-
-# Limpar cache
-php artisan cache:clear
-php artisan config:clear
-```
-
-### Frontend
-```bash
-# Entrar no container
-docker-compose exec frontend bash
-
-# Executar testes
-npm test
-
-# Build de produção
-npm run build
-```
+### Anexos
+| Método | Endpoint | Descrição |
+|--------|----------|-----------|
+| GET | /api/cards/{id}/attachments | Listar anexos |
+| POST | /api/cards/{id}/attachments | Upload de arquivo |
+| GET | /api/attachments/{id}/download | Baixar arquivo |
+| DELETE | /api/attachments/{id} | Excluir anexo |
 
 ## Design System
 
-### Cores Pastéis
-- Azul: `#A8D8EA`
-- Verde: `#AA96DA`
-- Rosa: `#FCBAD3`
-- Amarelo: `#FFFFD2`
-- Laranja: `#FFD3B6`
-- Vermelho: `#FFAAA5`
-- Verde-água: `#A8E6CF`
+### Cores Principais
+- Roxo (accent): `#7C6DD8`
+- Fundo primário: `#FAFAFA`
+- Fundo secundário: `#F4F5F7`
+
+### Cores Pastéis para Boards
+```javascript
+['#A8D8EA', '#AA96DA', '#FCBAD3', '#FFFFD2', '#FFD3B6', '#FFAAA5', '#A8E6CF', '#C7CEEA']
+```
 
 ### Tipografia
-- Fonte: Inter
-- Tamanhos: 12px, 14px, 16px, 18px, 20px, 24px, 32px
+- Fonte: Nunito (Google Fonts)
+- Hierarquia: títulos, subtítulos, texto secundário
 
-### Bordas Arredondadas
-- Small: 8px
-- Medium: 12px
-- Large: 16px
-- Extra Large: 20px
+### Componentes Reutilizáveis
+- `BoardCard` - Card de preview do board
+- `ListColumn` - Coluna de lista com cards
+- `CardItem` - Card individual
+- `CardModal` - Modal de criação/edição de card
+- `MembersModal` - Gerenciamento de membros
+- `LabelBadge` - Badge de label colorido
+
+## Testes
+
+O backend possui testes para:
+- Autenticação (registro, login, logout)
+- CRUD de boards
+- Reordenação de cards e listas
+- Filtros
+- Regressão de ordenação
+
+```bash
+docker compose -f docker-compose.simple.yml exec backend php artisan test
+```
+
+## Convenções
+
+### Idioma
+- Todo texto de UI em **português (pt-BR)** com acentuação correta
+- Commits conventional em pt-BR
+
+### CSS
+- Variáveis CSS definidas em `frontend/src/index.css`
+- Tema Ant Design via `theme/boardyTheme.ts`
+- Zero style inline
 
 ## Licença
 

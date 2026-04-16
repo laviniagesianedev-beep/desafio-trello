@@ -22,10 +22,11 @@ import {
   TeamOutlined,
   ClockCircleOutlined,
   LogoutOutlined,
+  InboxOutlined,
 } from '@ant-design/icons';
 import { useAuthStore } from '../store/authStore';
 import { useBoardStore } from '../store/boardStore';
-import { boardApi } from '../services/api';
+import { boardApi, authApi } from '../services/api';
 import './DashboardPage.css';
 
 const { Header, Content } = Layout;
@@ -61,7 +62,11 @@ function DashboardPage() {
   const [error, setError] = useState<string | null>(null);
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [selectedColor, setSelectedColor] = useState(PASTEL_COLORS[0]);
+  const [isCreating, setIsCreating] = useState(false);
   const [form] = Form.useForm();
+  const [archivedBoards, setArchivedBoards] = useState<BoardData[]>([]);
+  const [showArchived, setShowArchived] = useState(false);
+  const [loadingArchived, setLoadingArchived] = useState(false);
 
   useEffect(() => {
     loadBoards();
@@ -80,7 +85,38 @@ function DashboardPage() {
     }
   };
 
+  const loadArchivedBoards = async () => {
+    setLoadingArchived(true);
+    try {
+      const response = await boardApi.getArchived();
+      setArchivedBoards(response.data);
+    } catch {
+      message.error('Erro ao carregar quadros arquivados');
+    } finally {
+      setLoadingArchived(false);
+    }
+  };
+
+  const handleToggleArchived = async () => {
+    if (!showArchived && archivedBoards.length === 0) {
+      await loadArchivedBoards();
+    }
+    setShowArchived(!showArchived);
+  };
+
+  const handleRestoreBoard = async (boardId: number) => {
+    try {
+      await boardApi.restore(boardId);
+      message.success('Quadro restaurado');
+      await loadArchivedBoards();
+      loadBoards();
+    } catch {
+      message.error('Erro ao restaurar quadro');
+    }
+  };
+
   const handleCreateBoard = async (values: any) => {
+    setIsCreating(true);
     try {
       const response = await boardApi.create({
         title: values.title,
@@ -93,12 +129,14 @@ function DashboardPage() {
       navigate(`/board/${response.data.id}`);
     } catch {
       message.error('Erro ao criar quadro');
+    } finally {
+      setIsCreating(false);
     }
   };
 
   const handleLogout = async () => {
     try {
-      await boardApi.getAll();
+      await authApi.logout();
       logout();
       message.success('Logout realizado com sucesso!');
       navigate('/login');
@@ -167,8 +205,18 @@ function DashboardPage() {
             icon={<PlusOutlined />}
             onClick={() => setCreateModalOpen(true)}
             className="create-button"
+            loading={isCreating}
           >
             Criar Quadro
+          </Button>
+
+          <Button
+            type="text"
+            icon={<InboxOutlined />}
+            onClick={handleToggleArchived}
+            className={`archived-toggle ${showArchived ? 'active' : ''}`}
+          >
+            Arquivados
           </Button>
 
           <Dropdown menu={{ items: userMenuItems }} placement="bottomRight">
@@ -246,6 +294,43 @@ function DashboardPage() {
                   </Button>
                 </Empty>
               )}
+
+              {showArchived && (
+                <section className="boards-section archived-section">
+                  <div className="section-header">
+                    <Title level={3} className="section-title">
+                      <InboxOutlined /> Quadros Arquivados
+                    </Title>
+                  </div>
+                  {loadingArchived ? (
+                    <Spin size="small" />
+                  ) : archivedBoards.length === 0 ? (
+                    <Text type="secondary">Nenhum quadro arquivado.</Text>
+                  ) : (
+                    <div className="boards-grid">
+                      {archivedBoards.map(board => (
+                        <div key={board.id} className="board-card archived-board-card">
+                          <div className="board-card-cover" style={{ '--board-bg': board.background } as React.CSSProperties}>
+                            <div className="board-card-gradient">
+                              <Title level={4} className="board-card-title">{board.title}</Title>
+                            </div>
+                          </div>
+                          <div className="board-card-footer">
+                            <Button
+                              type="link"
+                              size="small"
+                              icon={<FolderOutlined />}
+                              onClick={() => handleRestoreBoard(board.id)}
+                            >
+                              Restaurar
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </section>
+              )}
             </>
           )}
         </div>
@@ -298,7 +383,7 @@ function DashboardPage() {
           <Form.Item>
             <div className="form-actions">
               <Button onClick={() => setCreateModalOpen(false)}>Cancelar</Button>
-              <Button type="primary" htmlType="submit">Criar Quadro</Button>
+              <Button type="primary" htmlType="submit" loading={isCreating}>Criar Quadro</Button>
             </div>
           </Form.Item>
         </Form>

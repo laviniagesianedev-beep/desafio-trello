@@ -173,6 +173,37 @@
   background: var(--bg-secondary);
 }
 
+.create-list-button {
+  height: 36px;
+  border-radius: var(--radius-md);
+  background: var(--pastel-purple) !important;
+  border: none !important;
+  font-weight: 500;
+  font-size: 13px;
+  color: #FFF !important;
+}
+
+.create-list-button:hover {
+  opacity: 0.85;
+}
+
+.archived-toggle {
+  height: 36px;
+  border-radius: var(--radius-md);
+  font-weight: 500;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.archived-toggle:hover {
+  background: var(--bg-secondary);
+}
+
+.archived-toggle.active {
+  background: rgba(124, 109, 216, 0.15);
+  color: var(--pastel-purple);
+}
+
 .more-button {
   width: 36px;
   height: 36px;
@@ -193,11 +224,18 @@
   min-height: calc(100vh - 96px);
 }
 
+.lists-wrapper {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  justify-content: center;
+  padding-bottom: 24px;
+}
+
 .lists-container {
   display: flex;
   gap: 12px;
   align-items: flex-start;
-  padding-bottom: 24px;
 }
 
 .list-column {
@@ -210,6 +248,37 @@
   flex-direction: column;
   max-height: calc(100vh - 120px);
   transition: background 0.15s ease;
+}
+
+.list-column-form {
+  background: transparent;
+  padding: 0;
+}
+
+.list-column-form .list-header {
+  background: #F4F5F7;
+  border-radius: var(--radius-md);
+  padding: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.list-column-form .list-title-form {
+  flex: 1;
+  display: flex;
+  align-items: center;
+}
+
+.list-column-form .list-title-form .ant-form-item {
+  margin-bottom: 0;
+  flex: 1;
+}
+
+.list-column-form .ant-btn-primary {
+  background: var(--pastel-purple);
+  border-color: var(--pastel-purple);
 }
 
 .list-column.drag-over {
@@ -388,45 +457,52 @@
   color: var(--text-primary);
 }
 
-.add-list-form {
-  background: #F4F5F7;
-  border-radius: var(--radius-md);
-  padding: 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.add-list-actions {
-  display: flex;
-  gap: 8px;
-}
-
-.add-list-button {
-  width: 300px;
-  min-width: 300px;
-  height: 40px;
-  border-radius: var(--radius-md);
-  background: rgba(255, 255, 255, 0.5);
-  border: none;
-  color: var(--text-secondary);
-  font-weight: 500;
-  transition: all 0.15s ease;
-}
-
-.add-list-button:hover {
-  background: rgba(255, 255, 255, 0.8);
-  color: var(--text-primary);
-}
-
 .board-empty {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   gap: 12px;
-  padding: 48px 0;
-  min-height: 300px;
+  padding-top: 48px;
+  text-align: center;
+}
+
+.archived-section {
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid #E8ECF0;
+}
+
+.archived-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.archived-title {
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.archived-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.archived-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: #F4F5F7;
+  border-radius: var(--radius-sm);
+}
+
+.archived-card-title {
+  color: var(--text-secondary);
+  font-size: 13px;
 }
 
 .drag-overlay-card {
@@ -534,16 +610,31 @@
     display: none;
   }
 
+  .archived-toggle span {
+    display: none;
+  }
+
+  .archived-toggle {
+    width: 36px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .create-list-button span {
+    display: none;
+  }
+
+  .more-button {
+    display: none;
+  }
+
   .lists-container {
     flex-direction: column;
   }
 
   .list-column {
-    width: 100%;
-    min-width: 0;
-  }
-
-  .add-list-button {
     width: 100%;
     min-width: 0;
   }
@@ -557,5 +648,9 @@
     left: 8px;
     right: 8px;
     min-width: 0;
+  }
+
+  .filter-search {
+    display: none;
   }
 }

@@ -12,7 +12,7 @@ import {
   message,
   Divider,
 } from 'antd';
-import { DeleteOutlined, PlusOutlined, EditOutlined, CheckOutlined, MessageOutlined, PaperClipOutlined, InboxOutlined, FolderOpenOutlined } from '@ant-design/icons';
+import { DeleteOutlined, PlusOutlined, EditOutlined, CheckOutlined, MessageOutlined, PaperClipOutlined, InboxOutlined, FolderOutlined } from '@ant-design/icons';
 import dayjs, { Dayjs } from 'dayjs';
 import ReactMarkdown from 'react-markdown';
 import { LabelBadge } from './LabelBadge';
@@ -178,6 +178,28 @@ export function CardModal({ card, boardId, listId, mode, open, onClose, onUpdate
     }
   };
 
+  const handleArchive = async () => {
+    if (!cardId) return;
+    setArchiveLoading(true);
+    try {
+      if (isArchived) {
+        await cardApi.restore(cardId);
+        setIsArchived(false);
+        message.success('Card desarquivado');
+      } else {
+        await cardApi.archive(cardId);
+        setIsArchived(true);
+        message.success('Card arquivado');
+      }
+      onUpdated();
+      onClose();
+    } catch {
+      message.error(isArchived ? 'Erro ao desarquivar' : 'Erro ao arquivar');
+    } finally {
+      setArchiveLoading(false);
+    }
+  };
+
   const toggleLabel = (label: Label) => {
     setLabels(prev =>
       prev.some(l => l.id === label.id)
@@ -270,6 +292,38 @@ export function CardModal({ card, boardId, listId, mode, open, onClose, onUpdate
   const currentChecklistItems = isCreate ? [] : checklistItems;
   const checklistDone = currentChecklistItems.filter(i => i.is_checked).length;
   const checklistTotal = currentChecklistItems.length;
+
+  const ensureCardAndThen = async (callback: (cid: number) => Promise<void>) => {
+    let targetId = cardId;
+    if (!targetId) {
+      if (!title.trim()) {
+        message.warning('Título é obrigatório');
+        return;
+      }
+      if (!listId) return;
+      try {
+        setSaving(true);
+        const payload: Record<string, unknown> = {
+          title: title.trim(),
+          description: description || undefined,
+          due_date: dueDate?.format('YYYY-MM-DD') || undefined,
+          label_ids: labels.map(l => l.id),
+        };
+        const { data } = await cardApi.create(listId, payload as Parameters<typeof cardApi.create>[1]);
+        setCardId(data.id);
+        targetId = data.id;
+        onUpdated();
+      } catch {
+        message.error('Erro ao criar card');
+        setSaving(false);
+        return;
+      }
+      setSaving(false);
+    }
+    if (targetId) {
+      await callback(targetId);
+    }
+  };
 
   return (
     <Modal
@@ -415,14 +469,18 @@ export function CardModal({ card, boardId, listId, mode, open, onClose, onUpdate
             )}
           </div>
 
-          {!isCreate && cardId && (
-            <>
-              <Divider className="modal-divider" />
+          <Divider className="modal-divider" />
 
-              <div className="modal-section">
-                <label className="modal-section-label">
-                  Checklist {checklistTotal > 0 && `(${checklistDone}/${checklistTotal})`}
-                </label>
+          <div className="modal-section">
+            <label className="modal-section-label">
+              Checklist {checklistTotal > 0 && `(${checklistDone}/${checklistTotal})`}
+            </label>
+            {isCreate ? (
+              <Text type="secondary" className="checklist-create-hint">
+                Após criar o card, você poderá adicionar itens ao checklist.
+              </Text>
+            ) : (
+              <>
                 {currentChecklistItems.map(item => (
                   <div key={item.id} className="checklist-item-row">
                     <Checkbox
@@ -448,56 +506,12 @@ export function CardModal({ card, boardId, listId, mode, open, onClose, onUpdate
                     Adicionar
                   </Button>
                 </Space>
-              </div>
+              </>
+            )}
+          </div>
 
-              <Divider className="modal-divider" />
-              <div className="modal-section">
-                {isArchived ? (
-                  <Button
-                    icon={<FolderOpenOutlined />}
-                    loading={archiveLoading}
-                    disabled={archiveLoading}
-                    onClick={async () => {
-                      setArchiveLoading(true);
-                      try {
-                        await cardApi.restore(cardId!);
-                        setIsArchived(false);
-                        message.success('Card desarquivado');
-                        onUpdated();
-                      } catch {
-                        message.error('Erro ao desarquivar');
-                      } finally {
-                        setArchiveLoading(false);
-                      }
-                    }}
-                  >
-                    Desarquivar
-                  </Button>
-                ) : (
-                  <Button
-                    icon={<InboxOutlined />}
-                    loading={archiveLoading}
-                    disabled={archiveLoading}
-                    onClick={async () => {
-                      setArchiveLoading(true);
-                      try {
-                        await cardApi.archive(cardId!);
-                        setIsArchived(true);
-                        message.success('Card arquivado');
-                        onUpdated();
-                        onClose();
-                      } catch {
-                        message.error('Erro ao arquivar');
-                      } finally {
-                        setArchiveLoading(false);
-                      }
-                    }}
-                  >
-                    Arquivar
-                  </Button>
-                )}
-              </div>
-
+          {!isCreate && cardId && (
+            <>
               <Divider className="modal-divider" />
               <div className="modal-section">
                 <div className="modal-section-header">
@@ -527,28 +541,32 @@ export function CardModal({ card, boardId, listId, mode, open, onClose, onUpdate
                     value={newComment}
                     onChange={e => setNewComment(e.target.value)}
                     onPressEnter={async () => {
-                      if (!newComment.trim() || !cardId) return;
-                      try {
-                        const { data } = await commentApi.create(cardId, newComment.trim());
-                        setComments(prev => [...prev, data]);
-                        setNewComment('');
-                      } catch {
-                        message.error('Erro ao adicionar comentário');
-                      }
+                      if (!newComment.trim()) return;
+                      await ensureCardAndThen(async (cid) => {
+                        try {
+                          const { data } = await commentApi.create(cid, newComment.trim());
+                          setComments(prev => [...prev, data]);
+                          setNewComment('');
+                        } catch {
+                          message.error('Erro ao adicionar comentário');
+                        }
+                      });
                     }}
                   />
                   <Button
                     type="primary"
                     icon={<PlusOutlined />}
                     onClick={async () => {
-                      if (!newComment.trim() || !cardId) return;
-                      try {
-                        const { data } = await commentApi.create(cardId, newComment.trim());
-                        setComments(prev => [...prev, data]);
-                        setNewComment('');
-                      } catch {
-                        message.error('Erro ao adicionar comentário');
-                      }
+                      if (!newComment.trim()) return;
+                      await ensureCardAndThen(async (cid) => {
+                        try {
+                          const { data } = await commentApi.create(cid, newComment.trim());
+                          setComments(prev => [...prev, data]);
+                          setNewComment('');
+                        } catch {
+                          message.error('Erro ao adicionar comentário');
+                        }
+                      });
                     }}
                   />
                 </div>
@@ -591,27 +609,29 @@ export function CardModal({ card, boardId, listId, mode, open, onClose, onUpdate
                 </div>
                 <input
                   type="file"
-                  id={`attachment-input-${cardId}`}
+                  id={`attachment-input-${cardId || 'new'}`}
                   className="attachment-file-input"
                   onChange={async (e) => {
                     const file = e.target.files?.[0];
-                    if (!file || !cardId) return;
-                    setUploading(true);
-                    try {
-                      const { data } = await attachmentApi.upload(cardId, file);
-                      setAttachments(prev => [...prev, data]);
-                      message.success('Anexo adicionado');
-                    } catch {
-                      message.error('Erro ao fazer upload');
-                    } finally {
-                      setUploading(false);
-                      e.target.value = '';
-                    }
+                    if (!file) return;
+                    await ensureCardAndThen(async (cid) => {
+                      setUploading(true);
+                      try {
+                        const { data } = await attachmentApi.upload(cid, file);
+                        setAttachments(prev => [...prev, data]);
+                        message.success('Anexo adicionado');
+                      } catch {
+                        message.error('Erro ao fazer upload');
+                      } finally {
+                        setUploading(false);
+                        e.target.value = '';
+                      }
+                    });
                   }}
                 />
                 <Button
                   icon={<PlusOutlined />}
-                  onClick={() => document.getElementById(`attachment-input-${cardId}`)?.click()}
+                  onClick={() => document.getElementById(`attachment-input-${cardId || 'new'}`)?.click()}
                   loading={uploading}
                   disabled={uploading}
                 >
@@ -621,18 +641,29 @@ export function CardModal({ card, boardId, listId, mode, open, onClose, onUpdate
 
               <Divider className="modal-divider" />
 
-              <Popconfirm
-                title="Excluir este card?"
-                description="Esta ação não pode ser desfeita."
-                onConfirm={handleDelete}
-                okText="Excluir"
-                cancelText="Cancelar"
-                okButtonProps={{ danger: true, loading: deleting }}
-              >
-                <Button danger icon={<DeleteOutlined />} className="delete-card-button" disabled={saving || deleting} loading={deleting}>
-                  Excluir card
+              <div className="modal-section modal-section-actions">
+                <Button
+                  icon={isArchived ? <FolderOutlined /> : <InboxOutlined />}
+                  loading={archiveLoading}
+                  disabled={archiveLoading}
+                  onClick={handleArchive}
+                >
+                  {isArchived ? 'Desarquivar' : 'Arquivar'}
                 </Button>
-              </Popconfirm>
+
+                <Popconfirm
+                  title="Excluir este card?"
+                  description="Esta ação não pode ser desfeita."
+                  onConfirm={handleDelete}
+                  okText="Excluir"
+                  cancelText="Cancelar"
+                  okButtonProps={{ danger: true, loading: deleting }}
+                >
+                  <Button danger icon={<DeleteOutlined />} disabled={saving || deleting} loading={deleting}>
+                    Excluir
+                  </Button>
+                </Popconfirm>
+              </div>
             </>
           )}
         </div>

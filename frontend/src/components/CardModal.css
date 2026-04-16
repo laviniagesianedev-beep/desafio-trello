@@ -114,6 +114,11 @@
   margin-top: 8px;
 }
 
+.checklist-create-hint {
+  font-size: 12px;
+  font-style: italic;
+}
+
 .description-preview {
   font-size: 13px;
   color: var(--text-primary);
@@ -271,4 +276,9 @@
 
 .attachment-file-input {
   display: none;
+}
+
+.modal-section-actions {
+  display: flex;
+  gap: 8px;
 }

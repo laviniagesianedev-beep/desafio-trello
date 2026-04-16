@@ -16,6 +16,7 @@ export interface CardData {
   checklist_items?: { id: number; content: string; is_checked: boolean; position: number }[];
   comments_count?: number;
   attachments_count?: number;
+  is_archived?: boolean;
 }
 
 interface CardItemProps {
@@ -84,6 +85,12 @@ export function CardItem({ card, onClick, isHidden = false }: CardItemProps) {
       )}
 
       <div className="card-meta">
+        {card.is_archived && (
+          <Tooltip title="Card arquivado">
+            <span className="card-archived">📦 Arquivado</span>
+          </Tooltip>
+        )}
+
         {card.due_date && (
           <Tooltip title={`Data de entrega: ${new Date(card.due_date).toLocaleDateString('pt-BR')}`}>
             <span className={`card-due ${overdue ? 'overdue' : ''} ${dueToday ? 'due-today' : ''}`}>

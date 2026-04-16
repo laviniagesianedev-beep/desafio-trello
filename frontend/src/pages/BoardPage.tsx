@@ -38,6 +38,9 @@ import {
   EditOutlined,
   SearchOutlined,
   FilterOutlined,
+  CloseOutlined,
+  InboxOutlined,
+  FolderOutlined,
 } from '@ant-design/icons';
 import { useBoardStore } from '../store/boardStore';
 import { boardApi, listApi, cardApi } from '../services/api';
@@ -99,6 +102,9 @@ function BoardPage() {
   const [archiveLoading, setArchiveLoading] = useState(false);
   const [restoreLoading, setRestoreLoading] = useState(false);
   const [deleteBoardLoading, setDeleteBoardLoading] = useState(false);
+  const [archivedCards, setArchivedCards] = useState<CardData[]>([]);
+  const [showArchived, setShowArchived] = useState(false);
+  const [loadingArchived, setLoadingArchived] = useState(false);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } })
@@ -127,6 +133,37 @@ function BoardPage() {
   useEffect(() => {
     loadBoard();
   }, [loadBoard]);
+
+  const loadArchivedCards = async () => {
+    if (!id) return;
+    setLoadingArchived(true);
+    try {
+      const { data } = await cardApi.getArchived(Number(id));
+      setArchivedCards(data);
+    } catch {
+      message.error('Erro ao carregar cards arquivados');
+    } finally {
+      setLoadingArchived(false);
+    }
+  };
+
+  const handleToggleArchived = async () => {
+    if (!showArchived && archivedCards.length === 0) {
+      await loadArchivedCards();
+    }
+    setShowArchived(!showArchived);
+  };
+
+  const handleRestoreCard = async (cardId: number) => {
+    try {
+      await cardApi.restore(cardId);
+      message.success('Card restaurado');
+      await loadArchivedCards();
+      loadBoard();
+    } catch {
+      message.error('Erro ao restaurar card');
+    }
+  };
 
   const handleCreateList = async (values: ListFormValues) => {
     setCreatingListLoading(true);
@@ -316,7 +353,7 @@ function BoardPage() {
     },
     {
       key: 'archive',
-      icon: <EditOutlined />,
+      icon: <InboxOutlined />,
       label: 'Arquivar',
       loading: archiveLoading,
       onClick: async () => {
@@ -335,7 +372,7 @@ function BoardPage() {
     },
     isArchived ? {
       key: 'restore',
-      icon: <EditOutlined />,
+      icon: <FolderOutlined />,
       label: 'Desarquivar',
       loading: restoreLoading,
       onClick: async () => {
@@ -384,41 +421,14 @@ function BoardPage() {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="board-loading">
-        <Spin size="large" />
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="board-loading">
-        <div className="board-error">
-          <Text className="board-error-text">{error}</Text>
-          <Button type="primary" onClick={loadBoard}>Tentar novamente</Button>
-          <Button onClick={() => navigate('/dashboard')}>Voltar</Button>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <Layout
-      className="board-layout"
-      style={currentBoard?.background ? {
-        '--board-bg-color': currentBoard.background,
-        backgroundColor: currentBoard.background,
-        backgroundImage: 'none',
-      } as React.CSSProperties : undefined}
-    >
+    <Layout className="board-layout">
       <Header className="board-header">
         <div className="header-left">
           <Button type="text" icon={<ArrowLeftOutlined />} onClick={() => navigate('/dashboard')} className="back-button" />
           <div className="board-info">
-            <Title level={4} className="board-title">{currentBoard?.title}</Title>
-            {currentBoard?.description && (
+            <Title level={4} className="board-title">{loading ? 'Carregando...' : currentBoard?.title}</Title>
+            {!loading && currentBoard?.description && (
               <Text className="board-description" ellipsis>{currentBoard.description}</Text>
             )}
           </div>
@@ -490,10 +500,28 @@ function BoardPage() {
                 </Tooltip>
               ))}
             </Avatar.Group>
-            <Button type="text" icon={<TeamOutlined />} className="members-button">
+            <Button type="text" icon={<TeamOutlined />} className="members-button" onClick={() => setMembersModalOpen(true)}>
               Membros
             </Button>
           </div>
+
+          <Button
+            type="primary"
+            icon={<PlusOutlined />}
+            onClick={() => setIsAddingList(true)}
+            className="create-list-button"
+          >
+            Adicionar Lista
+          </Button>
+
+          <Button
+            type="text"
+            icon={<InboxOutlined />}
+            onClick={handleToggleArchived}
+            className={`archived-toggle ${showArchived ? 'active' : ''}`}
+          >
+            Arquivados
+          </Button>
 
           <Dropdown menu={{ items: boardMenuItems }} placement="bottomRight">
             <Button type="text" icon={<MoreOutlined />} className="more-button" />
@@ -502,66 +530,109 @@ function BoardPage() {
       </Header>
 
       <Content className="board-content">
-        <DndContext
-          sensors={sensors}
-          collisionDetection={closestCorners}
-          onDragStart={handleDragStart}
-          onDragEnd={handleDragEnd}
-        >
-          <div className="board-container">
-            <div className="lists-container">
-              <SortableContext items={lists.map(l => `list-${l.id}`)} strategy={horizontalListSortingStrategy}>
-                {lists.map(list => (
-                  <ListColumn
-                    key={list.id}
-                    list={list}
-                    allLists={lists}
-                    onCardClick={handleCardClick}
-                    onCreateCard={handleCreateCard}
-                    onListUpdated={loadBoard}
-                    onListDeleted={loadBoard}
-                    hiddenCards={hiddenCards}
-                  />
-                ))}
-              </SortableContext>
-
-              {isAddingList ? (
-                <div className="add-list-form">
-                  <Form form={listForm} layout="vertical" onFinish={handleCreateList}>
-                    <Form.Item name="title" rules={[{ required: true, message: 'Título é obrigatório' }]}>
-                      <Input placeholder="Título da lista" autoFocus />
-                    </Form.Item>
-                    <div className="add-list-actions">
-                      <Button type="primary" htmlType="submit" size="small" loading={creatingListLoading}>Adicionar</Button>
-                      <Button size="small" onClick={() => { setIsAddingList(false); listForm.resetFields(); }}>Cancelar</Button>
-                    </div>
-                  </Form>
-                </div>
-              ) : (
-                <Button type="dashed" icon={<PlusOutlined />} className="add-list-button" onClick={() => setIsAddingList(true)}>
-                  Adicionar lista
-                </Button>
-              )}
-
-              {lists.length === 0 && (
+        {loading ? (
+          <div className="board-loading">
+            <Spin size="large" />
+          </div>
+        ) : error ? (
+          <div className="board-loading">
+            <div className="board-error">
+              <Text className="board-error-text">{error}</Text>
+              <Button type="primary" onClick={loadBoard}>Tentar novamente</Button>
+              <Button onClick={() => navigate('/dashboard')}>Voltar</Button>
+            </div>
+          </div>
+        ) : (
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCorners}
+            onDragStart={handleDragStart}
+            onDragEnd={handleDragEnd}
+          >
+            <div className="board-container">
+              {lists.length === 0 && !isAddingList && (
                 <div className="board-empty">
                   <Text type="secondary">Este quadro não tem nenhuma lista.</Text>
-                  <Button type="primary" onClick={() => setIsAddingList(true)}>
-                    Criar primeira lista
-                  </Button>
+                </div>
+              )}
+
+            <div className="lists-wrapper">
+              {isAddingList && (
+                <div className="list-column list-column-form">
+                  <div className="list-header">
+                    <Form form={listForm} layout="inline" onFinish={handleCreateList} className="list-title-form" style={{ flex: 1 }}>
+                      <Form.Item name="title" rules={[{ required: true, message: 'Título é obrigatório' }]} style={{ flex: 1, marginBottom: 0 }}>
+                        <Input
+                          placeholder="Título da lista"
+                          autoFocus
+                          size="small"
+                          onPressEnter={() => listForm.submit()}
+                        />
+                      </Form.Item>
+                    </Form>
+                    <Button type="primary" size="small" icon={<PlusOutlined />} onClick={() => listForm.submit()} loading={creatingListLoading} />
+                    <Button type="text" icon={<CloseOutlined />} className="list-menu-button" onClick={() => { setIsAddingList(false); listForm.resetFields(); }} />
+                  </div>
+                </div>
+              )}
+
+                <div className="lists-container">
+                  <SortableContext items={lists.map(l => `list-${l.id}`)} strategy={horizontalListSortingStrategy}>
+                    {lists.map(list => (
+                      <ListColumn
+                        key={list.id}
+                        list={list}
+                        allLists={lists}
+                        onCardClick={handleCardClick}
+                        onCreateCard={handleCreateCard}
+                        onListUpdated={loadBoard}
+                        onListDeleted={loadBoard}
+                        hiddenCards={hiddenCards}
+                      />
+                    ))}
+                  </SortableContext>
+                </div>
+              </div>
+
+              {showArchived && (
+                <div className="archived-section">
+                  <div className="archived-header">
+                    <Text strong className="archived-title">Cards Arquivados</Text>
+                  </div>
+                  {loadingArchived ? (
+                    <Spin size="small" />
+                  ) : archivedCards.length === 0 ? (
+                    <Text type="secondary">Nenhum card arquivado.</Text>
+                  ) : (
+                    <div className="archived-cards">
+                      {archivedCards.map(card => (
+                        <div key={card.id} className="archived-card">
+                          <Text className="archived-card-title">{card.title}</Text>
+                          <Button
+                            type="link"
+                            size="small"
+                            icon={<FolderOutlined />}
+                            onClick={() => handleRestoreCard(card.id)}
+                          >
+                            Restaurar
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
             </div>
-          </div>
 
-          <DragOverlay>
-            {activeCard && (
-              <div className="drag-overlay-card">
-                <CardItem card={activeCard} onClick={() => {}} />
-              </div>
-            )}
-          </DragOverlay>
-        </DndContext>
+            <DragOverlay>
+              {activeCard && (
+                <div className="drag-overlay-card">
+                  <CardItem card={activeCard} onClick={() => {}} />
+                </div>
+              )}
+            </DragOverlay>
+          </DndContext>
+        )}
       </Content>
 
       <CardModal

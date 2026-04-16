@@ -17,12 +17,14 @@ import './MembersModal.css';
 
 const { Text } = Typography;
 
+type RoleType = 'admin' | 'moderator' | 'normal' | 'observer';
+
 interface Member {
   id: number;
   user_id: number;
   name: string;
   email: string;
-  role: 'admin' | 'member';
+  role: RoleType;
 }
 
 interface MembersModalProps {
@@ -36,7 +38,7 @@ export function MembersModal({ open, onClose, boardId, onUpdated }: MembersModal
   const [members, setMembers] = useState<Member[]>([]);
   const [loading, setLoading] = useState(false);
   const [addingEmail, setAddingEmail] = useState('');
-  const [addRole, setAddRole] = useState<'admin' | 'member'>('member');
+  const [addRole, setAddRole] = useState<RoleType>('normal');
   const [addLoading, setAddLoading] = useState(false);
   const [removingIds, setRemovingIds] = useState<Set<number>>(new Set());
   const [updatingRoleId, setUpdatingRoleId] = useState<number | null>(null);
@@ -49,7 +51,14 @@ export function MembersModal({ open, onClose, boardId, onUpdated }: MembersModal
     setLoading(true);
     try {
       const { data } = await memberApi.getByBoard(boardId);
-      setMembers(data);
+      const formattedMembers: Member[] = data.map((m: any) => ({
+        id: m.id,
+        user_id: m.pivot?.user_id || m.id,
+        name: m.name,
+        email: m.email,
+        role: (m.pivot?.role || m.role || 'normal') as RoleType,
+      }));
+      setMembers(formattedMembers);
     } catch {
       message.error('Erro ao carregar membros');
     } finally {
@@ -65,7 +74,14 @@ export function MembersModal({ open, onClose, boardId, onUpdated }: MembersModal
     setAddLoading(true);
     try {
       const { data } = await memberApi.add(boardId, addingEmail.trim(), addRole);
-      setMembers(prev => [...prev, data]);
+      const newMember: Member = {
+        id: data.id,
+        user_id: data.id,
+        name: data.name,
+        email: data.email,
+        role: (data.role || addRole) as RoleType,
+      };
+      setMembers(prev => [...prev, newMember]);
       setAddingEmail('');
       message.success('Membro adicionado');
       onUpdated();
@@ -94,7 +110,7 @@ export function MembersModal({ open, onClose, boardId, onUpdated }: MembersModal
     }
   };
 
-  const handleUpdateRole = async (memberId: number, newRole: 'admin' | 'member') => {
+  const handleUpdateRole = async (memberId: number, newRole: RoleType) => {
     setUpdatingRoleId(memberId);
     try {
       await memberApi.updateRole(boardId, memberId, newRole);
@@ -107,6 +123,13 @@ export function MembersModal({ open, onClose, boardId, onUpdated }: MembersModal
       setUpdatingRoleId(null);
     }
   };
+
+  const roleOptions = [
+    { value: 'admin', label: 'Admin' },
+    { value: 'moderator', label: 'Moderador' },
+    { value: 'normal', label: 'Normal' },
+    { value: 'observer', label: 'Observador' },
+  ];
 
   return (
     <Modal
@@ -130,12 +153,9 @@ export function MembersModal({ open, onClose, boardId, onUpdated }: MembersModal
           />
           <Select
             value={addRole}
-            onChange={setAddRole}
-            style={{ width: 110 }}
-            options={[
-              { value: 'admin', label: 'Admin' },
-              { value: 'member', label: 'Membro' },
-            ]}
+            onChange={(val) => setAddRole(val as RoleType)}
+            style={{ width: 120 }}
+            options={roleOptions}
           />
           <Button
             type="primary"
@@ -160,14 +180,12 @@ export function MembersModal({ open, onClose, boardId, onUpdated }: MembersModal
               <Select
                 key="role"
                 value={member.role}
-                onChange={(val) => handleUpdateRole(member.id, val)}
+                onChange={(val) => handleUpdateRole(member.id, val as RoleType)}
                 size="small"
+                style={{ minWidth: 100 }}
                 loading={updatingRoleId === member.id}
                 disabled={updatingRoleId === member.id}
-                options={[
-                  { value: 'admin', label: 'Admin' },
-                  { value: 'member', label: 'Membro' },
-                ]}
+                options={roleOptions}
               />,
               <Popconfirm
                 key="remove"

@@ -84,6 +84,18 @@
   color: #2E7D32;
 }
 
+.card-archived {
+  font-size: 11px;
+  color: var(--text-light);
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  padding: 1px 6px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-secondary);
+  font-style: italic;
+}
+
 .card-labels {
   display: flex;
   flex-wrap: wrap;
