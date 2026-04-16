@@ -162,15 +162,20 @@
 
 /* Tooltip customizado */
 .custom-tooltip {
-  background: var(--text-primary) !important;
+  background: var(--pastel-purple) !important;
   border-radius: var(--radius-sm) !important;
   padding: 8px 12px !important;
   font-size: 13px !important;
   box-shadow: var(--shadow-medium) !important;
 }
 
-.custom-tooltip .ant-tooltip-arrow {
-  display: none;
+.custom-tooltip .ant-tooltip-arrow::before {
+  background: var(--pastel-purple) !important;
+}
+
+.custom-tooltip .ant-tooltip-inner {
+  color: #FFF !important;
+  background: transparent !important;
 }
 
 /* Modal backdrop */
