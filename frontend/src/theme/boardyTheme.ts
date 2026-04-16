@@ -161,10 +161,11 @@ export const boardyTheme: ThemeConfig = {
       controlHeight: 40,
     },
     Tooltip: {
-      colorBgElevated: '#2D3436',
-      colorText: '#FFFFFF',
+      colorBgElevated: '#FFFFFF',
+      colorText: '#7C6DD8',
       borderRadius: 8,
       fontSize: 12,
+      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
     },
     Popover: {
       colorBgElevated: '#FFFFFF',

@@ -175,7 +175,7 @@
 }
 
 .custom-tooltip .ant-tooltip-inner {
-  color: var(--text-primary) !important;
+  color: var(--pastel-purple) !important;
   background: transparent !important;
   padding: 0 !important;
 }
