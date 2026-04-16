@@ -84,6 +84,7 @@ export function CardModal({ card, boardId, listId, mode, open, onClose, onUpdate
   const [editingCommentId, setEditingCommentId] = useState<number | null>(null);
   const [editingCommentContent, setEditingCommentContent] = useState('');
   const [updatingComment, setUpdatingComment] = useState(false);
+  const [submittingComment, setSubmittingComment] = useState(false);
   const [attachments, setAttachments] = useState<{ id: number; file_name: string; file_size: number; created_at: string }[]>([]);
   const [uploading, setUploading] = useState(false);
 
@@ -602,9 +603,11 @@ export function CardModal({ card, boardId, listId, mode, open, onClose, onUpdate
                   />
                   <Button
                     type="primary"
-                    icon={<PlusOutlined />}
+                    icon={submittingComment ? <Spin size="small" /> : <Text style={{ fontSize: 16, fontWeight: 'bold' }}>{'>'}</Text>}
+                    loading={submittingComment}
                     onClick={async () => {
                       if (!newComment.trim() || newComment === '<p></p>') return;
+                      setSubmittingComment(true);
                       await ensureCardAndThen(async (cid) => {
                         try {
                           const { data } = await commentApi.create(cid, newComment);
@@ -612,6 +615,8 @@ export function CardModal({ card, boardId, listId, mode, open, onClose, onUpdate
                           setNewComment('');
                         } catch {
                           message.error('Erro ao adicionar comentário');
+                        } finally {
+                          setSubmittingComment(false);
                         }
                       });
                     }}
