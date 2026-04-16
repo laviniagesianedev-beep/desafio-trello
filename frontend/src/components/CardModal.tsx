@@ -80,7 +80,6 @@ export function CardModal({ card, boardId, listId, mode, open, onClose, onUpdate
     can_edit: boolean;
   }[]>([]);
   const [newComment, setNewComment] = useState('');
-  const [loadingComments, setLoadingComments] = useState(false);
   const [editingCommentId, setEditingCommentId] = useState<number | null>(null);
   const [editingCommentContent, setEditingCommentContent] = useState('');
   const [updatingComment, setUpdatingComment] = useState(false);
@@ -92,54 +91,78 @@ export function CardModal({ card, boardId, listId, mode, open, onClose, onUpdate
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [previewFileName, setPreviewFileName] = useState('');
   const [previewLoading, setPreviewLoading] = useState(false);
+  const [loadingComments, setLoadingComments] = useState(false);
+  const [isDataLoaded, setIsDataLoaded] = useState(false);
 
   const isCreate = mode === 'create';
 
   useEffect(() => {
-    if (!open) return;
+    if (!open) {
+      setIsDataLoaded(false);
+      return;
+    }
+    
+    setIsDataLoaded(false);
+    
     if (isCreate) {
       setTitle('');
       setDescription('');
       setDueDate(null);
       setLabels([]);
       setChecklistItems([]);
+      setComments([]);
+      setAttachments([]);
       setEditingDescription(false);
       setCardId(null);
+      setIsArchived(false);
+      loadBoardLabels(true);
+      setIsDataLoaded(true);
     } else if (card) {
       setTitle(card.title);
       setDescription(card.description || '');
       setDueDate(card.due_date ? dayjs(card.due_date) : null);
       setLabels(card.labels || []);
       setChecklistItems(card.checklist_items || []);
+      setComments([]);
+      setAttachments([]);
       setEditingDescription(false);
       setCardId(card.id);
       setIsArchived((card as any).is_archived ?? false);
+      loadAllCardData();
     }
-    loadBoardLabels();
+  }, [card, open, isCreate]);
 
-    const loadCardData = async () => {
-      if (!isCreate && cardId) {
-        setLoadingComments(true);
-        try {
-          const { data } = await commentApi.getByCard(cardId);
-          setComments(data);
-        } catch { /* ignore */ }
-        setLoadingComments(false);
-        try {
-          const { data } = await attachmentApi.getByCard(cardId);
-          setAttachments(data);
-        } catch { /* ignore */ }
-      }
-    };
-    loadCardData();
-  }, [card, open, isCreate, cardId]);
-
-  const loadBoardLabels = async () => {
+  const loadBoardLabels = async (setLoaded = false) => {
     try {
       const { data } = await labelApi.getByBoard(boardId);
       setBoardLabels(data);
+      if (setLoaded) {
+        setIsDataLoaded(true);
+      }
+    } catch {
+      if (setLoaded) setIsDataLoaded(true);
+    }
+  };
+
+  const loadAllCardData = async () => {
+    if (!cardId) return;
+    
+    setLoadingComments(true);
+    
+    try {
+      const [commentsRes, attachmentsRes] = await Promise.all([
+        commentApi.getByCard(cardId).catch(() => ({ data: [] })),
+        attachmentApi.getByCard(cardId).catch(() => ({ data: [] })),
+      ]);
+      setComments(commentsRes.data);
+      setAttachments(attachmentsRes.data);
+      setBoardLabels([]);
+      loadBoardLabels();
     } catch {
       // ignore
+    } finally {
+      setLoadingComments(false);
+      setIsDataLoaded(true);
     }
   };
 
@@ -360,12 +383,14 @@ export function CardModal({ card, boardId, listId, mode, open, onClose, onUpdate
     }
   };
 
+  const isLoading = saving || (!isCreate && !isDataLoaded);
+  
   return (
     <Modal
       open={open}
-      onCancel={saving ? undefined : onClose}
+      onCancel={isLoading ? undefined : onClose}
       className="card-modal"
-      footer={[
+      footer={isLoading ? null : [
         <Button key="cancel" onClick={onClose} disabled={saving}>Cancelar</Button>,
         isCreate ? (
           <Button key="createAnother" onClick={handleCreateAndContinue} loading={saving} disabled={!title.trim()}>
@@ -378,11 +403,11 @@ export function CardModal({ card, boardId, listId, mode, open, onClose, onUpdate
       ]}
       width={640}
       title={isCreate ? 'Novo card' : (card?.title || 'Editar card')}
-      maskClosable={!saving}
-      closable={!saving}
+      maskClosable={!isLoading}
+      closable={!isLoading}
     >
-      <Spin spinning={saving} tip="Salvando...">
-        <div className={saving ? 'modal-content-disabled' : ''}>
+      <Spin spinning={isLoading} tip={saving ? "Salvando..." : "Carregando..."}>
+        <div className={isLoading ? 'modal-content-disabled' : ''}>
           <div className="modal-section">
             <label className="modal-section-label">Título *</label>
             <Input

@@ -16,6 +16,20 @@
 
 .card-modal .ant-modal-body {
   padding: 20px;
+  min-height: 300px;
+}
+
+.card-modal .ant-spin-nested-loading {
+  height: 100%;
+}
+
+.card-modal .ant-spin-container {
+  height: 100%;
+}
+
+.card-modal .modal-content-disabled {
+  opacity: 0.5;
+  pointer-events: none;
 }
 
 .modal-section {
