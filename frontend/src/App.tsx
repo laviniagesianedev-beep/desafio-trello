@@ -4,6 +4,8 @@ import { boardyTheme } from './theme/boardyTheme';
 import { useAuthStore } from './store/authStore';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
+import ForgotPasswordPage from './pages/ForgotPasswordPage';
+import ResetPasswordPage from './pages/ResetPasswordPage';
 import DashboardPage from './pages/DashboardPage';
 import BoardPage from './pages/BoardPage';
 import './App.css';
@@ -17,6 +19,8 @@ function App() {
         <div className="app">
           <Routes>
             {/* Rotas públicas */}
+            <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+            <Route path="/reset-password" element={<ResetPasswordPage />} />
             <Route 
               path="/login" 
               element={token ? <Navigate to="/dashboard" replace /> : <LoginPage />} 

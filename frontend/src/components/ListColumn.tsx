@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { useDroppable } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
-import { Typography, Button, Input, Form, Dropdown, Popconfirm, Select, message, Space } from 'antd';
+import { Typography, Button, Input, Form, Dropdown, Popconfirm, Select, message } from 'antd';
 import { PlusOutlined, MoreOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import { CardItem, CardData } from './CardItem';
-import { listApi, cardApi } from '../services/api';
+import { listApi } from '../services/api';
 import './ListColumn.css';
 
 const { Title } = Typography;
@@ -20,19 +20,17 @@ interface ListColumnProps {
   list: ListData;
   allLists: ListData[];
   onCardClick: (card: CardData) => void;
+  onCreateCard: (listId: number) => void;
   onListUpdated: () => void;
   onListDeleted: () => void;
-  onCardCreated: () => void;
   hiddenCards?: Set<number>;
 }
 
-export function ListColumn({ list, allLists, onCardClick, onListUpdated, onListDeleted, onCardCreated, hiddenCards = new Set() }: ListColumnProps) {
+export function ListColumn({ list, allLists, onCardClick, onCreateCard, onListUpdated, onListDeleted, hiddenCards = new Set() }: ListColumnProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editingTitle, setEditingTitle] = useState(list.title);
-  const [isAddingCard, setIsAddingCard] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [moveToListId, setMoveToListId] = useState<number | undefined>(undefined);
-  const [form] = Form.useForm();
 
   const { setNodeRef, isOver } = useDroppable({
     id: `list-${list.id}`,
@@ -58,17 +56,6 @@ export function ListColumn({ list, allLists, onCardClick, onListUpdated, onListD
       onListDeleted();
     } catch {
       message.error('Erro ao excluir lista');
-    }
-  };
-
-  const handleAddCard = async (values: { title: string }) => {
-    try {
-      await cardApi.create(list.id, { title: values.title });
-      setIsAddingCard(false);
-      form.resetFields();
-      onCardCreated();
-    } catch {
-      message.error('Erro ao criar card');
     }
   };
 
@@ -107,7 +94,7 @@ export function ListColumn({ list, allLists, onCardClick, onListUpdated, onListD
     <div className={`list-column ${isOver ? 'drag-over' : ''}`} ref={setNodeRef}>
       <div className="list-header">
         {isEditing ? (
-          <Form form={form} layout="inline" className="list-title-form">
+          <Form layout="inline" className="list-title-form">
             <Input
               value={editingTitle}
               onChange={e => setEditingTitle(e.target.value)}
@@ -138,28 +125,14 @@ export function ListColumn({ list, allLists, onCardClick, onListUpdated, onListD
         </SortableContext>
       </div>
 
-      {isAddingCard ? (
-        <div className="add-card-form">
-          <Form form={form} layout="vertical" onFinish={handleAddCard}>
-            <Form.Item name="title" rules={[{ required: true, message: 'Título é obrigatório' }]}>
-              <Input placeholder="Título do card" autoFocus />
-            </Form.Item>
-            <Space>
-              <Button type="primary" htmlType="submit" size="small">Adicionar</Button>
-              <Button size="small" onClick={() => { setIsAddingCard(false); form.resetFields(); }}>Cancelar</Button>
-            </Space>
-          </Form>
-        </div>
-      ) : (
-        <Button
-          type="text"
-          icon={<PlusOutlined />}
-          className="add-card-button"
-          onClick={() => setIsAddingCard(true)}
-        >
-          Adicionar card
-        </Button>
-      )}
+      <Button
+        type="text"
+        icon={<PlusOutlined />}
+        className="add-card-button"
+        onClick={() => onCreateCard(list.id)}
+      >
+        Adicionar card
+      </Button>
 
       <Popconfirm
         open={deleteModalOpen}

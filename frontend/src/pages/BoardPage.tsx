@@ -45,6 +45,7 @@ import { ListColumn, ListData } from '../components/ListColumn';
 import { CardItem, CardData } from '../components/CardItem';
 import { CardModal } from '../components/CardModal';
 import { LabelBadge } from '../components/LabelBadge';
+import { MembersModal } from '../components/MembersModal';
 import './BoardPage.css';
 
 const { Header, Content } = Layout;
@@ -63,6 +64,7 @@ interface FilterState {
 const PASTEL_COLORS = [
   '#A8D8EA', '#AA96DA', '#FCBAD3', '#FFFFD2',
   '#FFD3B6', '#FFAAA5', '#A8E6CF', '#C7CEEA',
+  '#7C6DD8', '#E8D5F5', '#D5E8D4', '#FFE0CC',
 ];
 
 function BoardPage() {
@@ -75,6 +77,9 @@ function BoardPage() {
   const [isAddingList, setIsAddingList] = useState(false);
   const [selectedCard, setSelectedCard] = useState<CardData | null>(null);
   const [cardModalOpen, setCardModalOpen] = useState(false);
+  const [cardModalMode, setCardModalMode] = useState<'edit' | 'create'>('edit');
+  const [membersModalOpen, setMembersModalOpen] = useState(false);
+  const [createListId, setCreateListId] = useState<number | null>(null);
   const [listForm] = Form.useForm<ListFormValues>();
   const [activeCard, setActiveCard] = useState<CardData | null>(null);
   const [boardLabels, setBoardLabels] = useState<{ id: number; name: string; color: string }[]>([]);
@@ -88,6 +93,8 @@ function BoardPage() {
     dueDate: 'all',
   });
   const [showFilters, setShowFilters] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [isArchived, setIsArchived] = useState(false);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } })
@@ -96,6 +103,7 @@ function BoardPage() {
   const loadBoard = useCallback(async () => {
     if (!id) return;
     setLoading(true);
+    setError(null);
     try {
       const { data } = await boardApi.getById(Number(id));
       setCurrentBoard(data);
@@ -104,9 +112,9 @@ function BoardPage() {
       setEditBoardTitle(data.title);
       setEditBoardDesc(data.description || '');
       setEditBoardColor(data.background || '');
+      setIsArchived(data.is_archived ?? false);
     } catch {
-      message.error('Erro ao carregar quadro');
-      navigate('/dashboard');
+      setError('Não foi possível carregar o quadro. Tente novamente.');
     } finally {
       setLoading(false);
     }
@@ -130,6 +138,14 @@ function BoardPage() {
 
   const handleCardClick = (card: CardData) => {
     setSelectedCard(card);
+    setCardModalMode('edit');
+    setCardModalOpen(true);
+  };
+
+  const handleCreateCard = (listId: number) => {
+    setSelectedCard(null);
+    setCreateListId(listId);
+    setCardModalMode('create');
     setCardModalOpen(true);
   };
 
@@ -279,12 +295,14 @@ function BoardPage() {
       key: 'members',
       icon: <TeamOutlined />,
       label: 'Membros',
+      onClick: () => setMembersModalOpen(true),
     },
     { type: 'divider' as const },
     {
       key: 'star',
       icon: <StarOutlined />,
       label: 'Favoritar',
+      onClick: () => message.info('Em breve'),
     },
     {
       type: 'divider' as const,
@@ -293,8 +311,32 @@ function BoardPage() {
       key: 'archive',
       icon: <EditOutlined />,
       label: 'Arquivar',
+      onClick: async () => {
+        try {
+          await boardApi.archive(currentBoard!.id);
+          message.success('Quadro arquivado');
+          navigate('/dashboard');
+        } catch {
+          message.error('Erro ao arquivar quadro');
+        }
+      },
       danger: true,
     },
+    isArchived ? {
+      key: 'restore',
+      icon: <EditOutlined />,
+      label: 'Desarquivar',
+      onClick: async () => {
+        try {
+          await boardApi.restore(currentBoard!.id);
+          message.success('Quadro desarquivado');
+          setIsArchived(false);
+          loadBoard();
+        } catch {
+          message.error('Erro ao desarquivar');
+        }
+      },
+    } : null,
   ];
 
   const handleSaveBoard = async () => {
@@ -332,8 +374,27 @@ function BoardPage() {
     );
   }
 
+  if (error) {
+    return (
+      <div className="board-loading">
+        <div className="board-error">
+          <Text className="board-error-text">{error}</Text>
+          <Button type="primary" onClick={loadBoard}>Tentar novamente</Button>
+          <Button onClick={() => navigate('/dashboard')}>Voltar</Button>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <Layout className="board-layout">
+    <Layout
+      className="board-layout"
+      style={currentBoard?.background ? {
+        '--board-bg-color': currentBoard.background,
+        backgroundColor: currentBoard.background,
+        backgroundImage: 'none',
+      } as React.CSSProperties : undefined}
+    >
       <Header className="board-header">
         <div className="header-left">
           <Button type="text" icon={<ArrowLeftOutlined />} onClick={() => navigate('/dashboard')} className="back-button" />
@@ -438,9 +499,9 @@ function BoardPage() {
                     list={list}
                     allLists={lists}
                     onCardClick={handleCardClick}
+                    onCreateCard={handleCreateCard}
                     onListUpdated={loadBoard}
                     onListDeleted={loadBoard}
-                    onCardCreated={loadBoard}
                     hiddenCards={hiddenCards}
                   />
                 ))}
@@ -463,6 +524,15 @@ function BoardPage() {
                   Adicionar lista
                 </Button>
               )}
+
+              {lists.length === 0 && (
+                <div className="board-empty">
+                  <Text type="secondary">Este quadro não tem nenhuma lista.</Text>
+                  <Button type="primary" onClick={() => setIsAddingList(true)}>
+                    Criar primeira lista
+                  </Button>
+                </div>
+              )}
             </div>
           </div>
 
@@ -476,16 +546,23 @@ function BoardPage() {
         </DndContext>
       </Content>
 
-      {selectedCard && (
-        <CardModal
-          card={selectedCard}
-          boardId={Number(id)}
-          open={cardModalOpen}
-          onClose={() => setCardModalOpen(false)}
-          onUpdated={loadBoard}
-          onDeleted={loadBoard}
-        />
-      )}
+      <CardModal
+        card={cardModalMode === 'create' ? null : selectedCard}
+        boardId={Number(id)}
+        listId={createListId ?? undefined}
+        mode={cardModalMode}
+        open={cardModalOpen}
+        onClose={() => setCardModalOpen(false)}
+        onUpdated={loadBoard}
+        onDeleted={loadBoard}
+      />
+
+      <MembersModal
+        open={membersModalOpen}
+        onClose={() => setMembersModalOpen(false)}
+        boardId={Number(id)}
+        onUpdated={loadBoard}
+      />
 
       <Modal
         open={editingBoard}
@@ -511,7 +588,7 @@ function BoardPage() {
                 <div
                   key={color}
                   className={`color-option ${editBoardColor === color ? 'selected' : ''}`}
-                  style={{ backgroundColor: color }}
+                  style={{ '--opt-color': color } as React.CSSProperties}
                   onClick={() => setEditBoardColor(color)}
                 />
               ))}

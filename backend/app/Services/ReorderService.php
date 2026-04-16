@@ -2,8 +2,8 @@
 
 namespace App\Services;
 
-use App\Models\Card;
-use App\Models\ListModel;
+use App\Domain\Cards\Models\Card;
+use App\Domain\Lists\Models\ListModel;
 
 class ReorderService
 {

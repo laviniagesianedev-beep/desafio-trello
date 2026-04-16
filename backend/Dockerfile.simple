@@ -9,7 +9,8 @@ RUN apt-get update && apt-get install -y \
     unzip \
     libonig-dev \
     libsqlite3-dev \
-    && docker-php-ext-install pdo pdo_mysql pdo_sqlite mbstring exif pcntl bcmath gd xml \
+    libpq-dev \
+    && docker-php-ext-install pdo pdo_mysql pdo_sqlite pdo_pgsql mbstring exif pcntl bcmath gd xml pgsql \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 RUN echo "opcache.enable=1" >> /usr/local/etc/php/conf.d/opcache.ini \

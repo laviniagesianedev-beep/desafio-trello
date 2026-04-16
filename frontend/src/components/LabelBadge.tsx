@@ -41,10 +41,10 @@ export function LabelBadge({ name, color, onClick, onRemove, removable, size = '
     <Tag
       className={`label-badge ${onClick ? 'clickable' : ''} ${size === 'small' ? 'small' : ''}`}
       style={{
-        backgroundColor: bgColor,
-        borderColor: color,
-        color: color,
-      }}
+        '--label-bg': bgColor,
+        '--label-border': color,
+        '--label-text': color,
+      } as React.CSSProperties}
       onClick={onClick}
       closable={removable}
       onClose={onRemove}

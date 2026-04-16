@@ -81,6 +81,7 @@
   cursor: pointer;
   border: 1px solid #CCC;
   transition: border-color 0.15s ease;
+  background-color: var(--swatch-color);
 }
 
 .label-color-swatch.selected {
@@ -170,4 +171,104 @@
 
 .delete-card-button {
   margin-top: 8px;
+}
+
+.modal-date-picker {
+  width: 100%;
+}
+
+.modal-content-disabled {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.card-modal .ant-spin-nested-spinner {
+  min-height: 200px;
+}
+
+/* Comments */
+.comments-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 12px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.comment-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.comment-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.comment-date {
+  font-size: 11px;
+}
+
+.comment-content {
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.no-comments {
+  font-size: 13px;
+  font-style: italic;
+}
+
+.comment-input-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.comment-input-row .ant-input {
+  flex: 1;
+}
+
+/* Attachments */
+.attachments-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 12px;
+  max-height: 160px;
+  overflow-y: auto;
+}
+
+.attachment-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px;
+  background: var(--bg-secondary);
+  border-radius: var(--radius-sm);
+}
+
+.attachment-name {
+  flex: 1;
+  font-size: 13px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.attachment-size {
+  font-size: 11px;
+}
+
+.no-attachments {
+  font-size: 13px;
+  font-style: italic;
+  margin-bottom: 8px;
+}
+
+.attachment-file-input {
+  display: none;
 }

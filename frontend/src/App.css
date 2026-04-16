@@ -75,23 +75,22 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--pastel-blue);
+  background: var(--pastel-purple);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #8EC5D9;
+  background: #6A5BCA;
 }
 
 /* Selection color */
 ::selection {
-  background: var(--pastel-blue);
+  background: var(--pastel-light-blue);
   color: var(--text-primary);
 }
 
-/* Focus outline */
 :focus-visible {
-  outline: 2px solid var(--pastel-blue);
+  outline: 2px solid var(--pastel-purple);
   outline-offset: 2px;
 }
 

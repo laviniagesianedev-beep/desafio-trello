@@ -1,6 +1,8 @@
 .dashboard-layout {
   min-height: 100vh;
-  background-color: var(--pastel-light-blue);
+  background-color: var(--bg-primary);
+  background-image: radial-gradient(circle, var(--dot-color) 1px, transparent 1px);
+  background-size: var(--dot-size) var(--dot-size);
 }
 
 .dashboard-header {
@@ -70,7 +72,7 @@
 }
 
 .user-avatar-img {
-  background-color: var(--pastel-blue) !important;
+  background-color: var(--pastel-purple) !important;
   font-weight: 600 !important;
 }
 
@@ -146,6 +148,7 @@
   height: 100px;
   position: relative;
   overflow: hidden;
+  background-color: var(--board-bg, #E8D5F5);
 }
 
 .board-card-gradient {
@@ -239,13 +242,13 @@
 
 .create-board-form .ant-input:hover,
 .create-board-form .ant-input-textarea:hover {
-  border-color: var(--pastel-blue);
+  border-color: var(--pastel-purple);
 }
 
 .create-board-form .ant-input:focus,
 .create-board-form .ant-input-textarea:focus {
-  border-color: var(--pastel-blue);
-  box-shadow: 0 0 0 2px rgba(168, 216, 234, 0.2);
+  border-color: var(--pastel-purple);
+  box-shadow: 0 0 0 2px rgba(124, 109, 216, 0.2);
 }
 
 .color-picker {
@@ -261,6 +264,7 @@
   cursor: pointer;
   transition: all 0.15s ease;
   border: 2px solid transparent;
+  background-color: var(--opt-color);
 }
 
 .color-option:hover {
@@ -276,6 +280,18 @@
   display: flex;
   justify-content: flex-end;
   gap: 8px;
+}
+
+.board-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.board-error-text {
+  color: var(--text-secondary);
+  font-size: 16px;
 }
 
 @media (max-width: 768px) {

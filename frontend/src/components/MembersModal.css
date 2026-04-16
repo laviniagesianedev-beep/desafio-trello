@@ -1,0 +1,39 @@
+.members-modal .ant-modal-content {
+  border-radius: var(--radius-lg);
+}
+
+.members-modal .ant-modal-header {
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+}
+
+.members-add-form {
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--color-border, #E0E0E0);
+}
+
+.members-form-label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 13px;
+}
+
+.members-list .ant-list-item {
+  padding: 10px 0;
+  border-bottom: 1px solid #F0F0F0;
+}
+
+.members-list .ant-list-item:last-child {
+  border-bottom: none;
+}
+
+.members-list .ant-list-item-meta-title {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary, #2D3436);
+}
+
+.members-list .ant-list-item-meta-description {
+  font-size: 12px;
+  color: var(--text-secondary, #636E72);
+}

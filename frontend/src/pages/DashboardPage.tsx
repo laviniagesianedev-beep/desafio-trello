@@ -17,12 +17,11 @@ import {
 } from 'antd';
 import {
   PlusOutlined,
-  TeamOutlined,
-  SettingOutlined,
-  LogoutOutlined,
   FolderOutlined,
   StarOutlined,
+  TeamOutlined,
   ClockCircleOutlined,
+  LogoutOutlined,
 } from '@ant-design/icons';
 import { useAuthStore } from '../store/authStore';
 import { useBoardStore } from '../store/boardStore';
@@ -36,6 +35,7 @@ const { TextArea } = Input;
 const PASTEL_COLORS = [
   '#A8D8EA', '#AA96DA', '#FCBAD3', '#FFFFD2',
   '#FFD3B6', '#FFAAA5', '#A8E6CF', '#C7CEEA',
+  '#7C6DD8', '#E8D5F5', '#D5E8D4', '#FFE0CC',
 ];
 
 interface BoardData {
@@ -58,6 +58,7 @@ function DashboardPage() {
   const navigate = useNavigate();
   const { user, logout } = useAuthStore();
   const { boards, setBoards, setLoading, isLoading } = useBoardStore();
+  const [error, setError] = useState<string | null>(null);
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [selectedColor, setSelectedColor] = useState(PASTEL_COLORS[0]);
   const [form] = Form.useForm();
@@ -68,11 +69,12 @@ function DashboardPage() {
 
   const loadBoards = async () => {
     setLoading(true);
+    setError(null);
     try {
       const response = await boardApi.getAll();
       setBoards(response.data);
     } catch {
-      message.error('Erro ao carregar quadros');
+      setError('Não foi possível carregar seus quadros. Tente novamente.');
     } finally {
       setLoading(false);
     }
@@ -118,8 +120,6 @@ function DashboardPage() {
   };
 
   const userMenuItems = [
-    { key: 'profile', icon: <SettingOutlined />, label: 'Configurações' },
-    { type: 'divider' as const },
     { key: 'logout', icon: <LogoutOutlined />, label: 'Sair', onClick: handleLogout },
   ];
 
@@ -129,7 +129,7 @@ function DashboardPage() {
       className="board-card"
       onClick={() => navigate(`/board/${board.id}`)}
     >
-      <div className="board-card-cover" style={{ backgroundColor: board.background }}>
+      <div className="board-card-cover" style={{ '--board-bg': board.background } as React.CSSProperties}>
         <div className="board-card-gradient">
           <Title level={4} className="board-card-title">{board.title}</Title>
           {board.description && (
@@ -187,6 +187,13 @@ function DashboardPage() {
           {isLoading ? (
             <div className="loading-container">
               <Spin size="large" />
+            </div>
+          ) : error ? (
+            <div className="loading-container">
+              <div className="board-error">
+                <Text className="board-error-text">{error}</Text>
+                <Button type="primary" onClick={loadBoards}>Tentar novamente</Button>
+              </div>
             </div>
           ) : (
             <>
@@ -281,7 +288,7 @@ function DashboardPage() {
                 <div
                   key={color}
                   className={`color-option ${selectedColor === color ? 'selected' : ''}`}
-                  style={{ backgroundColor: color }}
+                  style={{ '--opt-color': color } as React.CSSProperties}
                   onClick={() => setSelectedColor(color)}
                 />
               ))}

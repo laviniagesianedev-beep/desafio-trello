@@ -2,26 +2,10 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
-
-class ChecklistItem extends Model
+/**
+ * @deprecated Use \App\Domain\Checklist\Models\ChecklistItem instead
+ */
+class ChecklistItem extends \App\Domain\Checklist\Models\ChecklistItem
 {
-    use HasFactory;
-
-    protected $fillable = [
-        'card_id',
-        'content',
-        'is_checked',
-        'position',
-    ];
-
-    protected $casts = [
-        'is_checked' => 'boolean',
-    ];
-
-    public function card()
-    {
-        return $this->belongsTo(Card::class);
-    }
+    use \Illuminate\Database\Eloquent\Factories\HasFactory;
 }
