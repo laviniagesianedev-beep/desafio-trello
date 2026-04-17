@@ -47,8 +47,7 @@ class AuthController extends Controller
             ], 422);
         } catch (\Exception $e) {
             return response()->json([
-                'message' => 'Erro ao registrar usuário',
-                'error' => $e->getMessage(),
+                'message' => 'Erro interno. Tente novamente mais tarde.',
             ], 500);
         }
     }
@@ -86,8 +85,7 @@ class AuthController extends Controller
             ], 422);
         } catch (\Exception $e) {
             return response()->json([
-                'message' => 'Erro ao fazer login',
-                'error' => $e->getMessage(),
+                'message' => 'Erro interno. Tente novamente mais tarde.',
             ], 500);
         }
     }
@@ -105,8 +103,7 @@ class AuthController extends Controller
             ]);
         } catch (\Exception $e) {
             return response()->json([
-                'message' => 'Erro ao fazer logout',
-                'error' => $e->getMessage(),
+                'message' => 'Erro interno. Tente novamente mais tarde.',
             ], 500);
         }
     }
@@ -142,8 +139,7 @@ class AuthController extends Controller
             ], 422);
         } catch (\Exception $e) {
             return response()->json([
-                'message' => 'Erro ao enviar email de recuperação',
-                'error' => $e->getMessage(),
+                'message' => 'Erro interno. Tente novamente mais tarde.',
             ], 500);
         }
     }
@@ -189,8 +185,7 @@ class AuthController extends Controller
             ], 422);
         } catch (\Exception $e) {
             return response()->json([
-                'message' => 'Erro ao redefinir senha',
-                'error' => $e->getMessage(),
+                'message' => 'Erro interno. Tente novamente mais tarde.',
             ], 500);
         }
     }
@@ -222,8 +217,7 @@ class AuthController extends Controller
             ], 422);
         } catch (\Exception $e) {
             return response()->json([
-                'message' => 'Erro ao atualizar perfil',
-                'error' => $e->getMessage(),
+                'message' => 'Erro interno. Tente novamente mais tarde.',
             ], 500);
         }
     }

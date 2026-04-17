@@ -42,8 +42,7 @@ class BoardController extends Controller
 
         } catch (\Exception $e) {
             return response()->json([
-                'message' => 'Erro ao buscar quadros',
-                'error' => $e->getMessage(),
+                'message' => 'Erro interno. Tente novamente mais tarde.',
             ], 500);
         }
     }
@@ -65,8 +64,7 @@ class BoardController extends Controller
 
         } catch (\Exception $e) {
             return response()->json([
-                'message' => 'Erro ao buscar quadros compartilhados',
-                'error' => $e->getMessage(),
+                'message' => 'Erro interno. Tente novamente mais tarde.',
             ], 500);
         }
     }
@@ -102,8 +100,7 @@ class BoardController extends Controller
 
         } catch (\Exception $e) {
             return response()->json([
-                'message' => 'Erro ao buscar quadros arquivados',
-                'error' => $e->getMessage(),
+                'message' => 'Erro interno. Tente novamente mais tarde.',
             ], 500);
         }
     }
@@ -139,8 +136,7 @@ class BoardController extends Controller
             ], 422);
         } catch (\Exception $e) {
             return response()->json([
-                'message' => 'Erro ao criar quadro',
-                'error' => $e->getMessage(),
+                'message' => 'Erro interno. Tente novamente mais tarde.',
             ], 500);
         }
     }
@@ -169,9 +165,8 @@ class BoardController extends Controller
 
         } catch (\Exception $e) {
             return response()->json([
-                'message' => 'Quadro não encontrado',
-                'error' => $e->getMessage(),
-            ], 404);
+                'message' => 'Erro interno. Tente novamente mais tarde.',
+            ], 500);
         }
     }
 
@@ -211,8 +206,7 @@ class BoardController extends Controller
             ], 422);
         } catch (\Exception $e) {
             return response()->json([
-                'message' => 'Erro ao atualizar quadro',
-                'error' => $e->getMessage(),
+                'message' => 'Erro interno. Tente novamente mais tarde.',
             ], 500);
         }
     }
@@ -245,8 +239,7 @@ class BoardController extends Controller
 
         } catch (\Exception $e) {
             return response()->json([
-                'message' => 'Erro ao arquivar quadro',
-                'error' => $e->getMessage(),
+                'message' => 'Erro interno. Tente novamente mais tarde.',
             ], 500);
         }
     }
@@ -279,8 +272,7 @@ class BoardController extends Controller
 
         } catch (\Exception $e) {
             return response()->json([
-                'message' => 'Erro ao restaurar quadro',
-                'error' => $e->getMessage(),
+                'message' => 'Erro interno. Tente novamente mais tarde.',
             ], 500);
         }
     }
@@ -309,8 +301,7 @@ class BoardController extends Controller
 
         } catch (\Exception $e) {
             return response()->json([
-                'message' => 'Erro ao excluir quadro',
-                'error' => $e->getMessage(),
+                'message' => 'Erro interno. Tente novamente mais tarde.',
             ], 500);
         }
     }

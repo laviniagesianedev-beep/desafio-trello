@@ -37,8 +37,7 @@ class AttachmentController extends Controller
 
         } catch (\Exception $e) {
             return response()->json([
-                'message' => 'Erro ao buscar anexos',
-                'error' => $e->getMessage(),
+                'message' => 'Erro interno. Tente novamente mais tarde.',
             ], 500);
         }
     }
@@ -108,8 +107,7 @@ class AttachmentController extends Controller
             ], 422);
         } catch (\Exception $e) {
             return response()->json([
-                'message' => 'Erro ao fazer upload do arquivo',
-                'error' => $e->getMessage(),
+                'message' => 'Erro interno. Tente novamente mais tarde.',
             ], 500);
         }
     }
@@ -141,8 +139,7 @@ class AttachmentController extends Controller
 
         } catch (\Exception $e) {
             return response()->json([
-                'message' => 'Erro ao baixar arquivo',
-                'error' => $e->getMessage(),
+                'message' => 'Erro interno. Tente novamente mais tarde.',
             ], 500);
         }
     }
@@ -180,8 +177,7 @@ class AttachmentController extends Controller
 
         } catch (\Exception $e) {
             return response()->json([
-                'message' => 'Erro ao obter preview',
-                'error' => $e->getMessage(),
+                'message' => 'Erro interno. Tente novamente mais tarde.',
             ], 500);
         }
     }
@@ -216,8 +212,7 @@ class AttachmentController extends Controller
 
         } catch (\Exception $e) {
             return response()->json([
-                'message' => 'Erro ao excluir anexo',
-                'error' => $e->getMessage(),
+                'message' => 'Erro interno. Tente novamente mais tarde.',
             ], 500);
         }
     }

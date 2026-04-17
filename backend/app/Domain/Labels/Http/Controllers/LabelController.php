@@ -24,7 +24,7 @@ class LabelController extends Controller
 
             return response()->json($labels);
         } catch (\Exception $e) {
-            return response()->json(['message' => 'Erro ao buscar labels', 'error' => $e->getMessage()], 500);
+            return response()->json(['message' => 'Erro interno. Tente novamente mais tarde.'], 500);
         }
     }
 
@@ -55,7 +55,7 @@ class LabelController extends Controller
         } catch (ValidationException $e) {
             return response()->json(['message' => 'Dados inválidos', 'errors' => $e->errors()], 422);
         } catch (\Exception $e) {
-            return response()->json(['message' => 'Erro ao criar label', 'error' => $e->getMessage()], 500);
+            return response()->json(['message' => 'Erro interno. Tente novamente mais tarde.'], 500);
         }
     }
 
@@ -84,7 +84,7 @@ class LabelController extends Controller
         } catch (ValidationException $e) {
             return response()->json(['message' => 'Dados inválidos', 'errors' => $e->errors()], 422);
         } catch (\Exception $e) {
-            return response()->json(['message' => 'Erro ao atualizar label', 'error' => $e->getMessage()], 500);
+            return response()->json(['message' => 'Erro interno. Tente novamente mais tarde.'], 500);
         }
     }
 
@@ -106,7 +106,7 @@ class LabelController extends Controller
 
             return response()->json(['message' => 'Label excluído com sucesso']);
         } catch (\Exception $e) {
-            return response()->json(['message' => 'Erro ao excluir label', 'error' => $e->getMessage()], 500);
+            return response()->json(['message' => 'Erro interno. Tente novamente mais tarde.'], 500);
         }
     }
 }

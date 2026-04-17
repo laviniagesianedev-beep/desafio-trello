@@ -45,8 +45,7 @@ class ListController extends Controller
 
         } catch (\Exception $e) {
             return response()->json([
-                'message' => 'Erro ao buscar listas',
-                'error' => $e->getMessage(),
+                'message' => 'Erro interno. Tente novamente mais tarde.',
             ], 500);
         }
     }
@@ -89,8 +88,7 @@ class ListController extends Controller
             ], 422);
         } catch (\Exception $e) {
             return response()->json([
-                'message' => 'Erro ao criar lista',
-                'error' => $e->getMessage(),
+                'message' => 'Erro interno. Tente novamente mais tarde.',
             ], 500);
         }
     }
@@ -120,9 +118,8 @@ class ListController extends Controller
 
         } catch (\Exception $e) {
             return response()->json([
-                'message' => 'Lista não encontrada',
-                'error' => $e->getMessage(),
-            ], 404);
+                'message' => 'Erro interno. Tente novamente mais tarde.',
+            ], 500);
         }
     }
 
@@ -161,8 +158,7 @@ class ListController extends Controller
             ], 422);
         } catch (\Exception $e) {
             return response()->json([
-                'message' => 'Erro ao atualizar lista',
-                'error' => $e->getMessage(),
+                'message' => 'Erro interno. Tente novamente mais tarde.',
             ], 500);
         }
     }
@@ -201,8 +197,7 @@ class ListController extends Controller
             ], 422);
         } catch (\Exception $e) {
             return response()->json([
-                'message' => 'Erro ao reordenar lista',
-                'error' => $e->getMessage(),
+                'message' => 'Erro interno. Tente novamente mais tarde.',
             ], 500);
         }
     }
@@ -263,8 +258,7 @@ class ListController extends Controller
             ], 422);
         } catch (\Exception $e) {
             return response()->json([
-                'message' => 'Erro ao excluir lista',
-                'error' => $e->getMessage(),
+                'message' => 'Erro interno. Tente novamente mais tarde.',
             ], 500);
         }
     }

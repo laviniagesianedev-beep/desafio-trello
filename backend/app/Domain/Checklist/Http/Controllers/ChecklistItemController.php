@@ -25,7 +25,7 @@ class ChecklistItemController extends Controller
 
             return response()->json($items);
         } catch (\Exception $e) {
-            return response()->json(['message' => 'Erro ao buscar checklist', 'error' => $e->getMessage()], 500);
+            return response()->json(['message' => 'Erro interno. Tente novamente mais tarde.'], 500);
         }
     }
 
@@ -58,7 +58,7 @@ class ChecklistItemController extends Controller
         } catch (ValidationException $e) {
             return response()->json(['message' => 'Dados inválidos', 'errors' => $e->errors()], 422);
         } catch (\Exception $e) {
-            return response()->json(['message' => 'Erro ao criar item', 'error' => $e->getMessage()], 500);
+            return response()->json(['message' => 'Erro interno. Tente novamente mais tarde.'], 500);
         }
     }
 
@@ -88,7 +88,7 @@ class ChecklistItemController extends Controller
         } catch (ValidationException $e) {
             return response()->json(['message' => 'Dados inválidos', 'errors' => $e->errors()], 422);
         } catch (\Exception $e) {
-            return response()->json(['message' => 'Erro ao atualizar item', 'error' => $e->getMessage()], 500);
+            return response()->json(['message' => 'Erro interno. Tente novamente mais tarde.'], 500);
         }
     }
 
@@ -110,7 +110,7 @@ class ChecklistItemController extends Controller
 
             return response()->json(['message' => 'Item excluído com sucesso']);
         } catch (\Exception $e) {
-            return response()->json(['message' => 'Erro ao excluir item', 'error' => $e->getMessage()], 500);
+            return response()->json(['message' => 'Erro interno. Tente novamente mais tarde.'], 500);
         }
     }
 }

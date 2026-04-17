@@ -38,8 +38,7 @@ class MemberController extends Controller
 
         } catch (\Exception $e) {
             return response()->json([
-                'message' => 'Erro ao buscar membros',
-                'error' => $e->getMessage(),
+                'message' => 'Erro interno. Tente novamente mais tarde.',
             ], 500);
         }
     }
@@ -102,8 +101,7 @@ class MemberController extends Controller
             ], 422);
         } catch (\Exception $e) {
             return response()->json([
-                'message' => 'Erro ao adicionar membro',
-                'error' => $e->getMessage(),
+                'message' => 'Erro interno. Tente novamente mais tarde.',
             ], 500);
         }
     }
@@ -157,8 +155,7 @@ class MemberController extends Controller
             ], 422);
         } catch (\Exception $e) {
             return response()->json([
-                'message' => 'Erro ao atualizar papel',
-                'error' => $e->getMessage(),
+                'message' => 'Erro interno. Tente novamente mais tarde.',
             ], 500);
         }
     }
@@ -214,8 +211,7 @@ class MemberController extends Controller
 
         } catch (\Exception $e) {
             return response()->json([
-                'message' => 'Erro ao remover membro',
-                'error' => $e->getMessage(),
+                'message' => 'Erro interno. Tente novamente mais tarde.',
             ], 500);
         }
     }

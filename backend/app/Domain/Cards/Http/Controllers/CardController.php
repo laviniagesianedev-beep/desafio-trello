@@ -44,8 +44,7 @@ class CardController extends Controller
 
         } catch (\Exception $e) {
             return response()->json([
-                'message' => 'Erro ao buscar cards',
-                'error' => $e->getMessage(),
+                'message' => 'Erro interno. Tente novamente mais tarde.',
             ], 500);
         }
     }
@@ -100,8 +99,7 @@ class CardController extends Controller
             ], 422);
         } catch (\Exception $e) {
             return response()->json([
-                'message' => 'Erro ao criar card',
-                'error' => $e->getMessage(),
+                'message' => 'Erro interno. Tente novamente mais tarde.',
             ], 500);
         }
     }
@@ -129,9 +127,8 @@ class CardController extends Controller
 
         } catch (\Exception $e) {
             return response()->json([
-                'message' => 'Card não encontrado',
-                'error' => $e->getMessage(),
-            ], 404);
+                'message' => 'Erro interno. Tente novamente mais tarde.',
+            ], 500);
         }
     }
 
@@ -182,8 +179,7 @@ class CardController extends Controller
             ], 422);
         } catch (\Exception $e) {
             return response()->json([
-                'message' => 'Erro ao atualizar card',
-                'error' => $e->getMessage(),
+                'message' => 'Erro interno. Tente novamente mais tarde.',
             ], 500);
         }
     }
@@ -222,8 +218,7 @@ class CardController extends Controller
             ], 422);
         } catch (\Exception $e) {
             return response()->json([
-                'message' => 'Erro ao reordenar card',
-                'error' => $e->getMessage(),
+                'message' => 'Erro interno. Tente novamente mais tarde.',
             ], 500);
         }
     }
@@ -270,8 +265,7 @@ class CardController extends Controller
             ], 422);
         } catch (\Exception $e) {
             return response()->json([
-                'message' => 'Erro ao mover card',
-                'error' => $e->getMessage(),
+                'message' => 'Erro interno. Tente novamente mais tarde.',
             ], 500);
         }
     }
@@ -305,8 +299,7 @@ class CardController extends Controller
 
         } catch (\Exception $e) {
             return response()->json([
-                'message' => 'Erro ao arquivar card',
-                'error' => $e->getMessage(),
+                'message' => 'Erro interno. Tente novamente mais tarde.',
             ], 500);
         }
     }
@@ -340,8 +333,7 @@ class CardController extends Controller
 
         } catch (\Exception $e) {
             return response()->json([
-                'message' => 'Erro ao restaurar card',
-                'error' => $e->getMessage(),
+                'message' => 'Erro interno. Tente novamente mais tarde.',
             ], 500);
         }
     }
@@ -374,8 +366,7 @@ class CardController extends Controller
 
         } catch (\Exception $e) {
             return response()->json([
-                'message' => 'Erro ao excluir card',
-                'error' => $e->getMessage(),
+                'message' => 'Erro interno. Tente novamente mais tarde.',
             ], 500);
         }
     }
@@ -411,8 +402,7 @@ class CardController extends Controller
 
         } catch (\Exception $e) {
             return response()->json([
-                'message' => 'Erro ao buscar cards arquivados',
-                'error' => $e->getMessage(),
+                'message' => 'Erro interno. Tente novamente mais tarde.',
             ], 500);
         }
     }
