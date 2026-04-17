@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { useDroppable } from '@dnd-kit/core';
-import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { useSortable, SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { Typography, Button, Input, Form, Dropdown, Popconfirm, Select, message } from 'antd';
-import { PlusOutlined, MoreOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
+import { PlusOutlined, MoreOutlined, EditOutlined, DeleteOutlined, HolderOutlined } from '@ant-design/icons';
 import { CardItem, CardData } from './CardItem';
 import { listApi } from '../services/api';
 import './ListColumn.css';
@@ -34,10 +34,32 @@ export function ListColumn({ list, allLists, onCardClick, onCreateCard, onListUp
   const [renameLoading, setRenameLoading] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
 
-  const { setNodeRef, isOver } = useDroppable({
+  const {
+    attributes,
+    listeners,
+    setNodeRef: setSortableRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({
     id: `list-${list.id}`,
     data: { type: 'list', list },
   });
+
+  const style = {
+    transform: transform ? `translate3d(${transform.x}px, ${transform.y}px, 0)` : undefined,
+    transition,
+  };
+
+  const { setNodeRef: setDroppableRef, isOver } = useDroppable({
+    id: `list-drop-${list.id}`,
+    data: { type: 'list', list },
+  });
+
+  const setRef = (node: HTMLElement | null) => {
+    setSortableRef(node);
+    setDroppableRef(node);
+  };
 
   const handleRename = async () => {
     setRenameLoading(true);
@@ -99,8 +121,19 @@ export function ListColumn({ list, allLists, onCardClick, onCreateCard, onListUp
   );
 
   return (
-    <div className={`list-column ${isOver ? 'drag-over' : ''}`} ref={setNodeRef}>
+    <div
+      className={`list-column ${isOver ? 'drag-over' : ''} ${isDragging ? 'is-dragging' : ''}`}
+      ref={setRef}
+      style={style}
+      {...attributes}
+    >
       <div className="list-header">
+        <Button
+          type="text"
+          icon={<HolderOutlined />}
+          className="list-drag-handle"
+          {...listeners}
+        />
         {isEditing ? (
           <Form layout="inline" className="list-title-form">
             <Input

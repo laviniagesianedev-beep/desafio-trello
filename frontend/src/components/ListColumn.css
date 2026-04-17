@@ -7,7 +7,8 @@
   display: flex;
   flex-direction: column;
   max-height: calc(100vh - 120px);
-  transition: background 0.15s ease;
+  transition: background 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+  touch-action: none;
 }
 
 .list-column.drag-over {
@@ -16,15 +17,39 @@
   outline-offset: -2px;
 }
 
+.list-column.is-dragging {
+  opacity: 0.5;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+}
+
 .list-header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   margin-bottom: 8px;
   padding: 4px 0;
+  gap: 4px;
+}
+
+.list-drag-handle {
+  cursor: grab;
+  color: var(--text-light);
+  padding: 4px;
+  width: 24px;
+  height: 24px;
+}
+
+.list-drag-handle:hover {
+  color: var(--text-secondary);
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.list-drag-handle:active {
+  cursor: grabbing;
 }
 
 .list-title {
+  flex: 1;
   margin: 0 !important;
   color: var(--text-primary) !important;
   font-size: 14px !important;
