@@ -88,11 +88,13 @@ class MemberController extends Controller
                 $board->id
             ));
 
-            // Retornar usuário com role
-            $memberUser->role = $role;
-            $memberUser->user_id = $memberUser->id;
-
-            return response()->json($memberUser, 201);
+            return response()->json([
+                'id' => $memberUser->id,
+                'user_id' => $memberUser->id,
+                'name' => $memberUser->name,
+                'email' => $memberUser->email,
+                'role' => $role,
+            ], 201);
 
         } catch (ValidationException $e) {
             return response()->json([
