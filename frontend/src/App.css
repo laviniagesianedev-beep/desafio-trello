@@ -180,6 +180,12 @@
   padding: 0 !important;
 }
 
+/* Tooltip padrão com texto escuro */
+.ant-tooltip:not(.ant-tooltip-hidden-class-only) .ant-tooltip-inner {
+  color: var(--text-primary) !important;
+  background: #333 !important;
+}
+
 /* Modal backdrop */
 .modal-backdrop {
   position: fixed;
