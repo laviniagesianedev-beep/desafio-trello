@@ -287,8 +287,8 @@
   right: -4px;
   min-width: 16px;
   height: 16px;
-  background: var(--error);
-  color: white;
+  background: var(--pastel-purple);
+  color: var(--pastel-purple);
   font-size: 10px;
   font-weight: 600;
   border-radius: 8px;
@@ -296,6 +296,7 @@
   align-items: center;
   justify-content: center;
   border: 2px solid white;
+  line-height: 1;
 }
 
 /* Status indicator */
