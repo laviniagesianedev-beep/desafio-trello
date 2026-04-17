@@ -496,7 +496,14 @@ function BoardPage() {
 
           <div className="board-members">
             <Avatar.Group maxCount={3} size={32}>
-              {currentBoard?.members?.map((member: any) => (
+              {currentBoard?.owner && (
+                <Tooltip key={currentBoard.owner.id} title={`${currentBoard.owner.name} (Dono)`}>
+                  <Avatar className="member-avatar owner">
+                    {currentBoard.owner.name.charAt(0).toUpperCase()}
+                  </Avatar>
+                </Tooltip>
+              )}
+              {currentBoard?.members?.filter((m: any) => m.id !== currentBoard?.owner?.id).map((member: any) => (
                 <Tooltip key={member.id} title={member.name}>
                   <Avatar className="member-avatar">
                     {member.name.charAt(0).toUpperCase()}
