@@ -564,18 +564,18 @@ function BoardPage() {
               {isAddingList && (
                 <div className="list-column list-column-form">
                   <div className="list-header">
-                    <Form form={listForm} layout="inline" onFinish={handleCreateList} className="list-title-form" style={{ flex: 1 }}>
+                    <Form id="list-form" form={listForm} layout="inline" onFinish={handleCreateList} className="list-title-form" style={{ flex: 1 }}>
                       <Form.Item name="title" rules={[{ required: true, message: 'Título é obrigatório' }]} style={{ flex: 1, marginBottom: 0 }}>
                         <Input
                           placeholder="Título da lista"
                           autoFocus
                           size="small"
-                          onPressEnter={() => listForm.submit()}
+                          disabled={creatingListLoading}
                         />
                       </Form.Item>
                     </Form>
-                    <Button type="primary" size="small" icon={<PlusOutlined />} onClick={() => listForm.submit()} loading={creatingListLoading} />
-                    <Button type="text" icon={<CloseOutlined />} className="list-menu-button" onClick={() => { setIsAddingList(false); listForm.resetFields(); }} />
+                    <Button type="primary" size="small" icon={<PlusOutlined />} htmlType="submit" loading={creatingListLoading} form="list-form" />
+                    <Button type="text" icon={<CloseOutlined />} className="list-menu-button" onClick={() => { setIsAddingList(false); listForm.resetFields(); }} disabled={creatingListLoading} />
                   </div>
                 </div>
               )}

@@ -14,15 +14,23 @@
   --bg-primary: #FFFFFF;
   --bg-secondary: #F8F5FF;
   --bg-hover: #EDE7F6;
+  --card-hover-bg: #FAFBFC;
 
   --text-primary: #2D3436;
   --text-secondary: #636E72;
   --text-light: #B2BEC3;
 
-  --success: #A8E6CF;
-  --warning: #FFD3B6;
-  --error: #FF6B6B;
-  --info: #7C6DD8;
+  --success: #2E7D32;
+  --warning: #E65100;
+  --error: #C62828;
+  --info: #1565C0;
+
+  --due-bg: #FFF3E0;
+  --due-color: #E65100;
+  --due-overdue-bg: #FFEBEE;
+  --due-overdue-color: #C62828;
+  --due-today-bg: #E3F2FD;
+  --due-today-color: #1565C0;
 
   --shadow-soft: 0 2px 8px rgba(124, 109, 216, 0.08);
   --shadow-medium: 0 4px 16px rgba(124, 109, 216, 0.10);
@@ -56,6 +64,10 @@
 
   --dot-color: #E0DAF0;
   --dot-size: 20px;
+
+  --label-border: transparent;
+  --label-bg: transparent;
+  --label-text: inherit;
 }
 
 * {

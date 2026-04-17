@@ -1,5 +1,5 @@
 .card-item {
-  background: #FFFFFF;
+  background: var(--bg-primary);
   border-radius: var(--radius-sm);
   padding: 8px 12px;
   margin-bottom: 6px;
@@ -12,7 +12,7 @@
 }
 
 .card-item:hover {
-  background: #FAFBFC;
+  background: var(--card-hover-bg);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
@@ -57,19 +57,19 @@
 }
 
 .card-due {
-  background: #FFF3E0;
-  color: #E65100;
+  background: var(--due-bg);
+  color: var(--due-color);
   font-weight: 500;
 }
 
 .card-due.overdue {
-  background: #FFEBEE;
-  color: #C62828;
+  background: var(--due-overdue-bg);
+  color: var(--due-overdue-color);
 }
 
 .card-due.due-today {
-  background: #E3F2FD;
-  color: #1565C0;
+  background: var(--due-today-bg);
+  color: var(--due-today-color);
 }
 
 .card-checklist {
@@ -81,7 +81,7 @@
 }
 
 .card-checklist.complete {
-  color: #2E7D32;
+  color: var(--success);
 }
 
 .card-archived {

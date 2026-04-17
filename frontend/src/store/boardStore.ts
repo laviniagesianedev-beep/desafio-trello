@@ -1,5 +1,11 @@
 import { create } from 'zustand';
 
+interface BoardUser {
+  id: number;
+  name: string;
+  email: string;
+}
+
 interface Board {
   id: number;
   user_id: number;
@@ -12,8 +18,8 @@ interface Board {
   members_count?: number;
   lists_count?: number;
   cards_count?: number;
-  members?: any[];
-  owner?: any;
+  members?: BoardUser[];
+  owner?: BoardUser;
 }
 
 interface BoardState {
