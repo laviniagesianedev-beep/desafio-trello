@@ -129,14 +129,11 @@ export function CardModal({ card, boardId, listId, mode, open, onClose, onUpdate
       setCardId(card.id);
       setIsArchived((card as any).is_archived ?? false);
       setIsDataLoaded(false);
-      loadAllCardData();
+      loadAllCardData(card.id);
     }
   }, [open, isCreate]);
 
-  const loadAllCardData = async () => {
-    if (!cardId) return;
-    
-    const targetId = cardId;
+  const loadAllCardData = async (targetId: number) => {
     
     try {
       const [labelsRes, commentsRes, attachmentsRes] = await Promise.all([
