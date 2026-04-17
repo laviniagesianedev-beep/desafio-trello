@@ -36,14 +36,15 @@ function hexToRgba(hex: string, alpha: number = 0.2): string {
 
 export function LabelBadge({ name, color, onClick, onRemove, removable, size = 'default' }: LabelBadgeProps) {
   const bgColor = LABEL_COLORS_MAP[color] || hexToRgba(color, 0.15);
+  const textColor = color || 'var(--pastel-purple)';
 
   return (
     <Tag
       className={`label-badge ${onClick ? 'clickable' : ''} ${size === 'small' ? 'small' : ''}`}
       style={{
         '--label-bg': bgColor,
-        '--label-border': color,
-        '--label-text': color,
+        '--label-border': textColor,
+        '--label-text': textColor,
       } as React.CSSProperties}
       onClick={onClick}
       closable={removable}
