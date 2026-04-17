@@ -319,7 +319,7 @@ class DatabaseSeeder extends Seeder
             ],
         ]);
 
-        // Projeto Geral B2PRO
+        // Projeto Geral B2PRO (com membros nos cards)
         $this->criarListasECards($projetoGeral, $lavinia, [
             [
                 'titulo' => 'Tarefas',
@@ -330,22 +330,49 @@ class DatabaseSeeder extends Seeder
                         'data_entrega' => now()->addDays(1)->format('Y-m-d'),
                         'labels' => ['Urgente'],
                         'comentarios' => ['Lembrar de preparar a apresentação!'],
+                        'membros' => [$lali->id, $fehge->id],
                     ],
-                    ['titulo' => 'Atualizar documentação', 'posicao' => 2, 'labels' => ['Documentação']],
-                    ['titulo' => 'Code review', 'posicao' => 3, 'labels' => ['Revisão']],
+                    [
+                        'titulo' => 'Atualizar documentação',
+                        'posicao' => 2,
+                        'labels' => ['Documentação'],
+                        'membros' => [$lavinia->id],
+                    ],
+                    [
+                        'titulo' => 'Code review',
+                        'posicao' => 3,
+                        'labels' => ['Revisão'],
+                        'membros' => [$lali->id],
+                    ],
                 ],
             ],
             [
                 'titulo' => 'Em Andamento',
                 'cards' => [
-                    ['titulo' => 'Desenvolvimento da feature X', 'posicao' => 1, 'labels' => ['Feature', 'Importante']],
+                    [
+                        'titulo' => 'Desenvolvimento da feature X',
+                        'posicao' => 1,
+                        'labels' => ['Feature', 'Importante'],
+                        'membros' => [$lavinia->id, $lali->id, $fehge->id],
+                    ],
+                    [
+                        'titulo' => 'Implementar testes E2E',
+                        'posicao' => 2,
+                        'labels' => ['Feature'],
+                        'membros' => [$fehge->id],
+                    ],
                 ],
             ],
             [
                 'titulo' => 'Concluído',
                 'cards' => [
-                    ['titulo' => 'Setup do projeto', 'posicao' => 1],
-                    ['titulo' => 'Design inicial', 'posicao' => 2, 'labels' => ['Design']],
+                    ['titulo' => 'Setup do projeto', 'posicao' => 1, 'membros' => [$lavinia->id, $lali->id]],
+                    [
+                        'titulo' => 'Design inicial',
+                        'posicao' => 2,
+                        'labels' => ['Design'],
+                        'membros' => [$fehge->id],
+                    ],
                 ],
             ],
         ]);
@@ -413,6 +440,11 @@ class DatabaseSeeder extends Seeder
                             'content' => '<p>' . $comentario . '</p>',
                         ]);
                     }
+                }
+
+                // Adicionar membros ao card
+                if (isset($cardData['membros'])) {
+                    $card->assignedMembers()->attach($cardData['membros']);
                 }
             }
         }

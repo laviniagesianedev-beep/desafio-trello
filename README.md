@@ -109,10 +109,22 @@ npm install
 npm run dev
 ```
 
-## Usuário de Teste
+## Usuários de Teste
 
-- Email: `laligesiane@gmail.com`
-- Senha: `Password123!`
+Execute `php artisan migrate:fresh --seed` para criar os dados de teste.
+
+| Nome | Email | Senha |
+|------|-------|-------|
+| Lavinia Gesiane | lavinia.gesiane.dev@b2pro.com.br | `Password123*` |
+| Lalige Santos | laligesiane@gmail.com | `Password123*` |
+| Fehge Silva | fehgesiane@gmail.com | `Senha123*` |
+
+Dados incluídos no seed:
+- 10 usuários
+- 27 boards com cores pastéis
+- 17 listas
+- 37 cards com labels, checklists e comentários
+- Cards com membros atribuídos (ex: Reunião semanal com Lalige e Fehge)
 
 ## Comandos Úteis
 
